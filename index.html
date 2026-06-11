@@ -211,6 +211,22 @@ td{padding:10px 13px;vertical-align:middle}
 .faq-intro{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#1E40AF;line-height:1.6}
 .fchv{font-size:14px;color:#9CA3AF;transition:transform .2s;display:inline-block}
 .fchv.open{transform:rotate(180deg)}
+
+.ret-section{margin-bottom:28px}
+.ret-section h3{font-size:14px;font-weight:700;color:#111;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid #E5E7EB}
+.ret-table{width:100%;border-collapse:collapse;font-size:13px}
+.ret-table th{background:#F9FAFB;padding:8px 10px;text-align:left;font-weight:600;color:#374151;border-bottom:2px solid #E5E7EB;white-space:nowrap}
+.ret-table td{padding:7px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle}
+.ret-table tr:hover td{background:#F9FAFB}
+.ret-m1{font-weight:600}
+.ret-high{color:#16A34A}.ret-mid{color:#D97706}.ret-low{color:#DC2626}
+.ret-note{font-size:11px;color:#9CA3AF;margin-top:4px}
+.ret-feb-note{font-size:11px;color:#6B7280;font-style:italic;padding:4px 8px;background:#FEF9C3;border-radius:4px;display:inline-block}
+.ret-region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.ret-rcard{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px}
+.ret-rcard h4{margin:0 0 10px;font-size:13px;font-weight:700;color:#374151}
+.ret-sparkline{width:100%;height:60px}
+
 </style>
 </head>
 <body>
@@ -232,6 +248,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div class="tabs">
   <div class="tab active" onclick="switchTab('countries',this)">🌍 Countries</div>
   <div class="tab" onclick="switchTab('regions',this)">📍 Regions</div>
+  <div class="tab" onclick="switchTab('retention',this)">📊 Retention</div>
   <div class="tab" onclick="switchTab('faq',this)">📖 Methodology &amp; FAQ</div>
 </div>
 
@@ -257,7 +274,7 @@ td{padding:10px 13px;vertical-align:middle}
             <th onclick="sortBy('score')" class="sorted">Score <span class="si">↓</span></th>
             <th onclick="sortBy('ftdConv')">FTD Conv. <span class="si">↕</span></th>
             <th onclick="sortBy('deliveries')">Deliveries/wk <span class="si">↕</span></th>
-            <th onclick="sortBy('shiftCancel')">Shift Cancel. <span class="si">↕</span></th>
+            <th onclick="sortBy('offerDecline')">Offer Decline <span class="si">↕</span></th>
             <th onclick="sortBy('driver')">Primary Driver <span class="si">↕</span></th>
             <th onclick="sortBy('m1Impact')">M1 Impact <span class="si">↕</span></th>
             <th></th>
@@ -276,6 +293,11 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="rsummary" id="region-cards"></div>
     <div id="region-detail-area"></div>
   </div>
+</div>
+
+<!-- Retention Panel -->
+<div class="panel" id="panel-retention">
+  <div id="retention-content" style="padding:18px 22px"></div>
 </div>
 
 <!-- FAQ Panel -->
@@ -440,7 +462,6 @@ const REGION_MAP = {
   DK:'NORTH', EE:'NORTH', FI:'NORTH', IS:'NORTH', LT:'NORTH', LU:'NORTH', LV:'NORTH', NO:'NORTH', SE:'NORTH',
   AT:'CENTRAL', CZ:'CENTRAL', HR:'CENTRAL', HU:'CENTRAL', PL:'CENTRAL', RS:'CENTRAL', SK:'CENTRAL', SI:'CENTRAL',
   GR:'SOUTH', CY:'SOUTH', MT:'SOUTH', AZ:'SOUTH', GE:'SOUTH', KZ:'SOUTH',
-  AE:'OTHER', JP:'OTHER',
 };
 const REGION_META = {
   GERMANY: {label:'Germany', color:'#F59E0B', type:'standalone'},
@@ -458,7 +479,7 @@ const MARKETS = [
      deliveries:{v:66.2,b:64.7,d:1.5,u:'',hb:true},
      ftdEarn:{v:513.3,b:507.1,d:6.2,u:'',hb:true},
      dutyHours:{v:27.1,b:27.2,d:-0.1,u:'h',hb:true},
-     shiftCancel:{v:31.9,b:28.5,d:3.4,u:'%',hb:false}
+     offerDecline:{v:55.2,b:54.3,d:0.9,u:'%',hb:false}
    },
    driver:"shift cancellations",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[63.1,64.8,67.8,70.5,60.8,63.4,66.2,12.1],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -468,7 +489,7 @@ const MARKETS = [
      deliveries:{v:50.5,b:48.6,d:2.0,u:'',hb:true},
      ftdEarn:{v:1363.8,b:1296.3,d:67.5,u:'',hb:true},
      dutyHours:{v:19.9,b:19.1,d:0.8,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:44.8,b:45.0,d:-0.2,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[46.4,48.3,50.9,50.3,48.1,49.2,50.5,12.6],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -478,9 +499,9 @@ const MARKETS = [
      deliveries:{v:52.9,b:49.4,d:3.5,u:'',hb:true},
      ftdEarn:{v:2905.0,b:2677.6,d:227.4,u:'',hb:true},
      dutyHours:{v:20.7,b:21.0,d:-0.3,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:25.0,b:25.4,d:-0.4,u:'%',hb:false}
    },
-   driver:"active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   driver:"active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Activate an offer-acceptance recovery campaign for couriers with elevated decline rates. Personalised message explaining optimal zone strategy + push alert for high-demand hours in their typical area.",m1weeks:null,
    trend:[45.4,51.3,51.8,50.3,47.5,53.5,52.9,11.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'EE',country:'Estonia',flag:'🇪🇪',status:'watch',score:51.0,scoreDelta:0,
    signals:{
@@ -488,9 +509,9 @@ const MARKETS = [
      deliveries:{v:39.7,b:42.2,d:-2.6,u:'',hb:true},
      ftdEarn:{v:167.8,b:169.8,d:-2.0,u:'',hb:true},
      dutyHours:{v:17.2,b:19.1,d:-1.8,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:50.4,b:50.7,d:-0.3,u:'%',hb:false}
    },
-   driver:"active hours + weekly deliveries",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Early activation push: in-app milestones + earnings rewards in first 14 days",m1weeks:5,
+   driver:"active hours + weekly deliveries",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Run a CRM lifecycle campaign targeting couriers in weeks 2–4: earnings milestone push, personalised goal-setting message, and a 'Keep it up' reward if they hit 10 deliveries in the first 2 weeks.",m1weeks:5,
    trend:[40.9,39.9,46.5,42.4,40.3,40.2,39.7,10.9],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'FI',country:'Finland',flag:'🇫🇮',status:'critical',score:30.0,scoreDelta:0,
    signals:{
@@ -498,19 +519,19 @@ const MARKETS = [
      deliveries:{v:75.2,b:75.3,d:-0.1,u:'',hb:true},
      ftdEarn:{v:358.8,b:358.7,d:0.1,u:'',hb:true},
      dutyHours:{v:47.1,b:47.8,d:-0.8,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:16.2,b:15.7,d:0.5,u:'%',hb:false}
    },
-   driver:"FTD conversion + active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Engagement nudge: push notifications targeting couriers with \u22645h on platform in first week",m1weeks:2,
+   driver:"FTD conversion + active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Trigger a high-urgency reactivation flow for couriers who drop below 5h platform time in week 1. Combine a push + email with an earnings incentive framed around their first-month earning potential.",m1weeks:2,
    trend:[77.3,76.9,74.4,73.4,71.7,74.4,75.2,11.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'IS',country:'Iceland',flag:'🇮🇸',status:'watch',score:50.0,scoreDelta:0,
    signals:{
-     ftdConv:{v:0.0,b:0.0,d:0.0,u:'%',hb:true},
+     ftdConv:{v:null,b:null,d:null,u:'%',hb:true,na:true},
      deliveries:{v:71.2,b:68.1,d:3.1,u:'',hb:true},
      ftdEarn:{v:99362.9,b:97885.8,d:1477.1,u:'',hb:true},
      dutyHours:{v:31.4,b:32.4,d:-1.0,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:58.9,b:54.0,d:4.9,u:'%',hb:false}
    },
-   driver:"active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Engagement nudge: push notifications targeting couriers with \u22645h on platform in first week",m1weeks:5,
+   driver:"active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Deploy a hyper-personalised onboarding sequence given the small cohort size. 1:1-feel comms (push + email) highlighting local earning benchmarks and community belonging.",m1weeks:5,
    trend:[57.9,71.0,74.6,74.1,66.7,67.5,71.2,12.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'LT',country:'Lithuania',flag:'🇱🇹',status:'watch',score:55.0,scoreDelta:0,
    signals:{
@@ -518,9 +539,9 @@ const MARKETS = [
      deliveries:{v:37.3,b:38.0,d:-0.7,u:'',hb:true},
      ftdEarn:{v:140.0,b:142.5,d:-2.5,u:'',hb:true},
      dutyHours:{v:25.0,b:25.1,d:-0.1,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:43.7,b:44.0,d:-0.3,u:'%',hb:false}
    },
-   driver:"weekly deliveries",hypo:"Weekly deliveries per active courier are below baseline. Couriers are online but completing fewer orders \u2014 review order availability and routing efficiency.",lever:"Early activation push: in-app milestones + earnings rewards in first 14 days",m1weeks:5,
+   driver:"weekly deliveries",hypo:"Weekly deliveries per active courier are below baseline. Couriers are online but completing fewer orders \u2014 review order availability and routing efficiency.",lever:"Launch a delivery-frequency nurture campaign: send couriers a personalised 'earnings gap' message showing how many more orders it takes to reach their weekly goal, with a mid-week nudge if they're below pace.",m1weeks:5,
    trend:[38.6,35.5,38.8,38.3,38.2,37.7,37.3,8.2],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'LU',country:'Luxembourg',flag:'🇱🇺',status:'stable',score:69.0,scoreDelta:0,
    signals:{
@@ -528,9 +549,9 @@ const MARKETS = [
      deliveries:{v:59.3,b:56.9,d:2.4,u:'',hb:true},
      ftdEarn:{v:572.6,b:540.2,d:32.4,u:'',hb:true},
      dutyHours:{v:38.0,b:38.4,d:-0.4,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:11.7,b:10.9,d:0.8,u:'%',hb:false}
    },
-   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Given small market size, deploy a high-touch CRM onboarding sequence: manual-feel push communications, hyper-local demand previews, and a month-1 earnings guarantee message to reduce uncertainty.",m1weeks:null,
    trend:[54.9,57.8,59.2,57.3,54.0,54.1,59.3,10.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'LV',country:'Latvia',flag:'🇱🇻',status:'stable',score:63.0,scoreDelta:0,
    signals:{
@@ -538,7 +559,7 @@ const MARKETS = [
      deliveries:{v:37.4,b:38.0,d:-0.6,u:'',hb:true},
      ftdEarn:{v:127.2,b:126.2,d:0.9,u:'',hb:true},
      dutyHours:{v:23.8,b:23.4,d:0.4,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:62.6,b:61.6,d:1.0,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[37.3,33.3,38.6,40.5,38.6,39.6,37.4,8.7],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -548,9 +569,9 @@ const MARKETS = [
      deliveries:{v:45.7,b:45.6,d:0.1,u:'',hb:true},
      ftdEarn:{v:3653.1,b:3721.9,d:-68.8,u:'',hb:true},
      dutyHours:{v:25.4,b:26.0,d:-0.6,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:56.6,b:53.2,d:3.4,u:'%',hb:false}
    },
-   driver:"active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Engagement nudge: push notifications targeting couriers with \u22645h on platform in first week",m1weeks:5,
+   driver:"active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Activate a re-engagement push for couriers showing declining duty hours. Focus on the 'quiet period' — identify couriers who went online <3 days in the last 2 weeks and send an earnings-recovery message.",m1weeks:5,
    trend:[44.3,44.4,43.9,46.9,47.3,47.8,45.7,9.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'SE',country:'Sweden',flag:'🇸🇪',status:'stable',score:70.0,scoreDelta:0,
    signals:{
@@ -558,17 +579,17 @@ const MARKETS = [
      deliveries:{v:32.4,b:30.8,d:1.6,u:'',hb:true},
      ftdEarn:{v:1867.7,b:1772.6,d:95.1,u:'',hb:true},
      dutyHours:{v:18.6,b:19.4,d:-0.8,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:51.0,b:46.4,d:4.6,u:'%',hb:false}
    },
    driver:"active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[32.3,30.9,29.6,29.4,30.6,33.8,32.4,7.2],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'AT',country:'Austria',flag:'🇦🇹',status:'stable',score:57.0,scoreDelta:0,
    signals:{
-     ftdConv:{v:0.0,b:0.0,d:0.0,u:'%',hb:true},
+     ftdConv:{v:null,b:null,d:null,u:'%',hb:true,na:true},
      deliveries:{v:32.8,b:32.1,d:0.8,u:'',hb:true},
      ftdEarn:{v:179.2,b:168.9,d:10.3,u:'',hb:true},
      dutyHours:{v:25.1,b:25.0,d:0.1,u:'h',hb:true},
-     shiftCancel:{v:12.9,b:22.4,d:-9.6,u:'%',hb:false}
+     offerDecline:{v:46.0,b:45.5,d:0.5,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[30.8,31.8,32.3,33.3,28.0,33.0,32.8,6.2],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -578,7 +599,7 @@ const MARKETS = [
      deliveries:{v:36.1,b:37.4,d:-1.3,u:'',hb:true},
      ftdEarn:{v:4117.1,b:4126.3,d:-9.1,u:'',hb:true},
      dutyHours:{v:17.4,b:17.6,d:-0.2,u:'h',hb:true},
-     shiftCancel:{v:31.9,b:33.6,d:-1.7,u:'%',hb:false}
+     offerDecline:{v:69.9,b:70.2,d:-0.3,u:'%',hb:false}
    },
    driver:"weekly deliveries + active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[37.7,34.6,36.1,39.6,38.4,36.6,36.1,8.8],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -588,9 +609,9 @@ const MARKETS = [
      deliveries:{v:104.9,b:109.3,d:-4.4,u:'',hb:true},
      ftdEarn:{v:434.1,b:433.7,d:0.4,u:'',hb:true},
      dutyHours:{v:34.9,b:36.8,d:-2.0,u:'h',hb:true},
-     shiftCancel:{v:22.1,b:22.3,d:-0.2,u:'%',hb:false}
+     offerDecline:{v:8.0,b:6.7,d:1.3,u:'%',hb:false}
    },
-   driver:"weekly deliveries + active hours",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Early activation push: in-app milestones + earnings rewards in first 14 days",m1weeks:5,
+   driver:"weekly deliveries + active hours",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Implement a structured 30-day activation journey via CRM: day-7 check-in (earnings recap), day-14 milestone reward, day-21 loyalty nudge. Prioritise email + push for couriers with <8 deliveries in week 2.",m1weeks:5,
    trend:[110.3,99.0,115.8,112.8,114.8,103.7,104.9,22.5],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'HU',country:'Hungary',flag:'🇭🇺',status:'stable',score:71.0,scoreDelta:0,
    signals:{
@@ -598,7 +619,7 @@ const MARKETS = [
      deliveries:{v:50.5,b:48.6,d:1.8,u:'',hb:true},
      ftdEarn:{v:62580.2,b:60700.0,d:1880.3,u:'',hb:true},
      dutyHours:{v:20.7,b:20.0,d:0.7,u:'h',hb:true},
-     shiftCancel:{v:39.1,b:37.0,d:2.1,u:'%',hb:false}
+     offerDecline:{v:44.7,b:43.8,d:0.9,u:'%',hb:false}
    },
    driver:"shift cancellations",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[47.8,44.9,53.0,50.8,46.8,47.0,50.5,11.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -608,9 +629,9 @@ const MARKETS = [
      deliveries:{v:22.7,b:24.8,d:-2.0,u:'',hb:true},
      ftdEarn:{v:376.0,b:394.6,d:-18.6,u:'',hb:true},
      dutyHours:{v:19.4,b:20.3,d:-0.9,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:50.2,b:50.1,d:0.1,u:'%',hb:false}
    },
-   driver:"weekly deliveries + active hours",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Early activation push: in-app milestones + earnings rewards in first 14 days",m1weeks:5,
+   driver:"weekly deliveries + active hours",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Scale a mass-personalised lifecycle campaign targeting at-risk cohorts: couriers completing <6 deliveries/week receive a 'Boost your week' push with a time-limited bonus. Segment by city for localised messaging.",m1weeks:5,
    trend:[25.2,22.6,25.4,25.5,23.2,24.2,22.7,5.7],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'RS',country:'Serbia',flag:'🇷🇸',status:'stable',score:67.0,scoreDelta:0,
    signals:{
@@ -618,7 +639,7 @@ const MARKETS = [
      deliveries:{v:87.1,b:81.1,d:6.0,u:'',hb:true},
      ftdEarn:{v:22961.5,b:23082.4,d:-120.9,u:'',hb:true},
      dutyHours:{v:36.5,b:35.9,d:0.7,u:'h',hb:true},
-     shiftCancel:{v:20.4,b:18.1,d:2.3,u:'%',hb:false}
+     offerDecline:{v:16.4,b:13.6,d:2.8,u:'%',hb:false}
    },
    driver:"shift cancellations",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[82.7,77.7,86.0,87.9,83.2,83.3,87.1,16.8],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -628,9 +649,9 @@ const MARKETS = [
      deliveries:{v:49.7,b:51.3,d:-1.6,u:'',hb:true},
      ftdEarn:{v:212.2,b:207.5,d:4.7,u:'',hb:true},
      dutyHours:{v:23.4,b:23.0,d:0.5,u:'h',hb:true},
-     shiftCancel:{v:26.8,b:34.1,d:-7.4,u:'%',hb:false}
+     offerDecline:{v:46.1,b:46.5,d:-0.4,u:'%',hb:false}
    },
-   driver:"weekly deliveries",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   driver:"weekly deliveries",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Implement a scheduled-market engagement campaign: send couriers proactive messages about upcoming shift availability, paired with an earnings projection for the week ahead to reduce uncertainty-driven declines.",m1weeks:null,
    trend:[53.0,48.2,51.3,54.9,50.9,49.1,49.7,10.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'SI',country:'Slovenia',flag:'🇸🇮',status:'watch',score:54.0,scoreDelta:0,
    signals:{
@@ -638,9 +659,9 @@ const MARKETS = [
      deliveries:{v:53.4,b:53.3,d:0.1,u:'',hb:true},
      ftdEarn:{v:249.9,b:230.1,d:19.8,u:'',hb:true},
      dutyHours:{v:18.3,b:18.3,d:-0.0,u:'h',hb:true},
-     shiftCancel:{v:50.9,b:42.9,d:8.0,u:'%',hb:false}
+     offerDecline:{v:30.3,b:29.7,d:0.6,u:'%',hb:false}
    },
-   driver:"shift cancellations",hypo:"Shift cancellation rate is elevated relative to baseline \u2014 a behavioural pre-churn signal. Couriers starting to disengage tend to cancel shifts 2\u20133 weeks before going inactive.",lever:"Investigate cancellation reasons; review schedule flexibility and peak-hour incentive structure",m1weeks:5,
+   driver:"shift cancellations",hypo:"Shift cancellation rate is elevated relative to baseline \u2014 a behavioural pre-churn signal. Couriers starting to disengage tend to cancel shifts 2\u20133 weeks before going inactive.",lever:"Deploy a disengagement early-warning CRM flow: when offer decline rises, trigger a targeted push within 48h to affected couriers offering flexibility options and highlighting upcoming high-demand windows.",m1weeks:5,
    trend:[53.1,46.7,51.2,54.9,56.0,54.1,53.4,12.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'GR',country:'Greece',flag:'🇬🇷',status:'stable',score:76.0,scoreDelta:0,
    signals:{
@@ -648,9 +669,9 @@ const MARKETS = [
      deliveries:{v:48.8,b:45.3,d:3.5,u:'',hb:true},
      ftdEarn:{v:158.0,b:161.0,d:-3.0,u:'',hb:true},
      dutyHours:{v:20.1,b:20.2,d:-0.1,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:26.6,b:27.9,d:-1.3,u:'%',hb:false}
    },
-   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Run a proactive retention campaign for the growing cohort: week-2 personalised earnings recap, week-4 milestone badge, and a refer-a-friend incentive to increase community stickiness.",m1weeks:null,
    trend:[45.7,46.8,47.3,44.8,46.0,45.2,48.8,11.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'CY',country:'Cyprus',flag:'🇨🇾',status:'stable',score:80.0,scoreDelta:0,
    signals:{
@@ -658,7 +679,7 @@ const MARKETS = [
      deliveries:{v:87.8,b:80.0,d:7.8,u:'',hb:true},
      ftdEarn:{v:261.6,b:238.7,d:22.9,u:'',hb:true},
      dutyHours:{v:44.9,b:43.5,d:1.4,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:41.8,b:43.0,d:-1.2,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[78.4,82.3,85.0,81.4,83.0,84.1,87.8,15.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -668,7 +689,7 @@ const MARKETS = [
      deliveries:{v:72.9,b:74.9,d:-2.0,u:'',hb:true},
      ftdEarn:{v:286.6,b:286.5,d:0.0,u:'',hb:true},
      dutyHours:{v:37.6,b:35.4,d:2.2,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:37.4,b:38.5,d:-1.1,u:'%',hb:false}
    },
    driver:"weekly deliveries",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[74.5,76.1,76.7,73.8,74.8,77.3,72.9,11.7],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -678,7 +699,7 @@ const MARKETS = [
      deliveries:{v:38.2,b:35.6,d:2.7,u:'',hb:true},
      ftdEarn:{v:146.0,b:125.3,d:20.8,u:'',hb:true},
      dutyHours:{v:22.5,b:21.2,d:1.3,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:26.7,b:25.3,d:1.4,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[35.0,36.7,36.0,34.0,36.8,35.9,38.2,9.5],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -688,7 +709,7 @@ const MARKETS = [
      deliveries:{v:56.0,b:56.0,d:0.0,u:'',hb:true},
      ftdEarn:{v:414.3,b:420.8,d:-6.5,u:'',hb:true},
      dutyHours:{v:24.2,b:24.3,d:-0.1,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:33.8,b:33.7,d:0.1,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
    trend:[57.4,54.6,57.5,54.5,54.8,55.4,56.0,12.8],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
@@ -698,17 +719,38 @@ const MARKETS = [
      deliveries:{v:38.8,b:34.8,d:4.0,u:'',hb:true},
      ftdEarn:{v:50792.5,b:42782.4,d:8010.1,u:'',hb:true},
      dutyHours:{v:23.1,b:22.3,d:0.8,u:'h',hb:true},
-     shiftCancel:{v:null,b:null,d:null,u:'%',hb:false}
+     offerDecline:{v:53.3,b:51.3,d:2.0,u:'%',hb:false}
    },
    driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
-   trend:[34.4,34.0,36.5,34.9,34.8,35.1,38.8,9.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
-  {id:'AE',country:'UAE',flag:'🇦🇪',status:'stable',score:65,scoreDelta:0,
-   signals:{ftdConv:{v:null,b:null,d:0,u:'%',hb:true},deliveries:{v:null,b:null,d:0,u:'',hb:true},ftdEarn:{v:null,b:null,d:0,u:'',hb:true},dutyHours:{v:null,b:null,d:0,u:'h',hb:true},shiftCancel:{v:null,b:null,d:0,u:'%',hb:false}},
-   driver:'—',hypo:'No Snowflake data available for this market.',lever:'Check data pipeline',m1weeks:null,trend:[],dataWeek:'—'},
-  {id:'JP',country:'Japan',flag:'🇯🇵',status:'stable',score:65,scoreDelta:0,
-   signals:{ftdConv:{v:null,b:null,d:0,u:'%',hb:true},deliveries:{v:null,b:null,d:0,u:'',hb:true},ftdEarn:{v:null,b:null,d:0,u:'',hb:true},dutyHours:{v:null,b:null,d:0,u:'h',hb:true},shiftCancel:{v:null,b:null,d:0,u:'%',hb:false}},
-   driver:'—',hypo:'No Snowflake data available for this market.',lever:'Check data pipeline',m1weeks:null,trend:[],dataWeek:'—'}
-];
+   trend:[34.4,34.0,36.5,34.9,34.8,35.1,38.8,9.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},];
+
+const RETENTION_DATA = {
+  AT:[{m:'2026-03',s:53,m1:35.8,m2:75.5},{m:'2026-02',s:103,m1:5.8,m2:48.5},{m:'2026-01',s:131,m1:59.5,m2:26.7},{m:'2025-12',s:117,m1:63.2,m2:67.5},{m:'2025-11',s:149,m1:69.8,m2:73.2},{m:'2025-10',s:126,m1:47.6,m2:69.0},{m:'2025-09',s:69,m1:37.7,m2:49.3}],
+  AZ:[{m:'2026-04',s:475,m1:44.2,m2:24.8},{m:'2026-03',s:980,m1:60.2,m2:39.6},{m:'2026-02',s:1428,m1:21.6,m2:39.8},{m:'2026-01',s:1500,m1:66.1,m2:18.7},{m:'2025-12',s:1160,m1:59.9,m2:46.2},{m:'2025-11',s:1133,m1:63.3,m2:41.7},{m:'2025-10',s:1312,m1:61.2,m2:42.4},{m:'2025-09',s:730,m1:67.0,m2:47.1}],
+  CY:[{m:'2026-04',s:159,m1:93.1,m2:78.0},{m:'2026-03',s:554,m1:90.8,m2:84.1},{m:'2026-02',s:483,m1:66.0,m2:81.8},{m:'2026-01',s:492,m1:83.7,m2:55.3},{m:'2025-12',s:437,m1:86.5,m2:77.3},{m:'2025-11',s:363,m1:86.5,m2:76.6},{m:'2025-10',s:279,m1:83.5,m2:75.6},{m:'2025-09',s:57,m1:70.2,m2:68.4}],
+  CZ:[{m:'2026-04',s:192,m1:78.6,m2:46.4},{m:'2026-03',s:708,m1:65.5,m2:56.2},{m:'2026-02',s:931,m1:22.9,m2:52.2},{m:'2026-01',s:918,m1:69.2,m2:19.7},{m:'2025-12',s:572,m1:63.8,m2:53.1},{m:'2025-11',s:722,m1:65.9,m2:52.9},{m:'2025-10',s:788,m1:64.1,m2:51.9},{m:'2025-09',s:467,m1:66.8,m2:59.1}],
+  DE:[{m:'2026-04',s:381,m1:88.7,m2:45.4},{m:'2026-03',s:854,m1:92.0,m2:78.5},{m:'2026-02',s:1322,m1:55.0,m2:70.5},{m:'2026-01',s:863,m1:92.2,m2:47.5},{m:'2025-12',s:847,m1:91.1,m2:77.3},{m:'2025-11',s:1234,m1:89.9,m2:81.8},{m:'2025-10',s:1282,m1:88.1,m2:74.6},{m:'2025-09',s:991,m1:93.9,m2:80.1}],
+  DK:[{m:'2026-04',s:128,m1:67.2,m2:57.8},{m:'2026-03',s:443,m1:59.8,m2:64.6},{m:'2026-02',s:446,m1:22.0,m2:53.6},{m:'2026-01',s:605,m1:51.7,m2:20.5},{m:'2025-12',s:472,m1:48.3,m2:42.6},{m:'2025-11',s:731,m1:51.8,m2:51.8},{m:'2025-10',s:872,m1:51.3,m2:50.8},{m:'2025-09',s:597,m1:36.3,m2:51.3}],
+  EE:[{m:'2026-04',s:46,m1:65.2,m2:39.1},{m:'2026-03',s:119,m1:76.5,m2:67.2},{m:'2026-02',s:85,m1:22.4,m2:54.1},{m:'2026-01',s:742,m1:39.8,m2:7.7},{m:'2025-12',s:305,m1:43.3,m2:27.9},{m:'2025-11',s:581,m1:74.2,m2:31.8},{m:'2025-10',s:407,m1:58.2,m2:36.4},{m:'2025-09',s:101,m1:39.6,m2:47.5}],
+  FI:[{m:'2026-03',s:217,m1:84.3,m2:91.2},{m:'2026-01',s:19,m1:57.9,m2:57.9},{m:'2025-12',s:118,m1:28.0,m2:29.7},{m:'2025-11',s:15,m1:6.7,m2:6.7},{m:'2025-10',s:23,m1:0.0,m2:4.3},{m:'2025-09',s:15,m1:6.7,m2:0.0}],
+  GE:[{m:'2026-04',s:100,m1:84.0,m2:69.0},{m:'2026-03',s:465,m1:81.5,m2:73.8},{m:'2026-02',s:392,m1:44.4,m2:69.1},{m:'2026-01',s:546,m1:82.8,m2:36.1},{m:'2025-12',s:320,m1:66.9,m2:67.5},{m:'2025-11',s:692,m1:63.4,m2:58.5},{m:'2025-10',s:412,m1:74.0,m2:67.0},{m:'2025-09',s:191,m1:64.4,m2:63.9}],
+  GR:[{m:'2026-04',s:235,m1:83.0,m2:66.0},{m:'2026-03',s:919,m1:77.8,m2:79.4},{m:'2026-02',s:836,m1:40.6,m2:70.8},{m:'2026-01',s:1027,m1:78.1,m2:44.3},{m:'2025-12',s:760,m1:66.3,m2:75.5},{m:'2025-11',s:951,m1:61.6,m2:68.7},{m:'2025-10',s:1045,m1:63.3,m2:61.1},{m:'2025-09',s:555,m1:50.5,m2:56.4}],
+  HR:[{m:'2026-04',s:28,m1:96.4,m2:57.1},{m:'2026-03',s:173,m1:84.4,m2:56.1},{m:'2026-02',s:168,m1:35.1,m2:46.4},{m:'2026-01',s:97,m1:83.5,m2:26.8},{m:'2025-12',s:57,m1:77.2,m2:61.4},{m:'2025-11',s:123,m1:76.4,m2:58.5},{m:'2025-10',s:230,m1:79.6,m2:65.2},{m:'2025-09',s:103,m1:86.4,m2:62.1}],
+  HU:[{m:'2026-04',s:252,m1:81.7,m2:64.7},{m:'2026-03',s:698,m1:78.7,m2:72.6},{m:'2026-02',s:775,m1:35.0,m2:67.5},{m:'2026-01',s:702,m1:70.1,m2:28.8},{m:'2025-12',s:387,m1:65.1,m2:68.5},{m:'2025-11',s:728,m1:64.1,m2:64.3},{m:'2025-10',s:973,m1:74.7,m2:69.3},{m:'2025-09',s:669,m1:72.3,m2:69.1}],
+  IL:[{m:'2026-04',s:175,m1:78.9,m2:67.4},{m:'2026-03',s:848,m1:67.0,m2:76.1},{m:'2026-02',s:821,m1:40.4,m2:66.7},{m:'2026-01',s:983,m1:71.1,m2:35.5},{m:'2025-12',s:670,m1:56.0,m2:55.5},{m:'2025-11',s:1246,m1:53.9,m2:44.6},{m:'2025-10',s:1174,m1:66.0,m2:48.1},{m:'2025-09',s:507,m1:47.1,m2:53.6}],
+  IS:[{m:'2025-11',s:16,m1:31.3,m2:25.0},{m:'2025-10',s:22,m1:59.1,m2:77.3},{m:'2025-09',s:18,m1:16.7,m2:44.4}],
+  KZ:[{m:'2026-04',s:495,m1:59.2,m2:35.4},{m:'2026-03',s:2951,m1:65.9,m2:46.5},{m:'2026-02',s:2614,m1:26.9,m2:44.6},{m:'2026-01',s:3112,m1:68.2,m2:19.9},{m:'2025-12',s:3254,m1:62.0,m2:43.0},{m:'2025-11',s:5863,m1:61.1,m2:40.4},{m:'2025-10',s:4995,m1:66.4,m2:42.3},{m:'2025-09',s:1573,m1:68.2,m2:46.5}],
+  LT:[{m:'2026-04',s:40,m1:90.0,m2:80.0},{m:'2026-03',s:178,m1:80.9,m2:74.7},{m:'2026-02',s:208,m1:52.9,m2:70.2},{m:'2026-01',s:980,m1:61.7,m2:21.5},{m:'2025-12',s:356,m1:57.3,m2:41.9},{m:'2025-11',s:479,m1:73.7,m2:55.9},{m:'2025-10',s:518,m1:71.8,m2:68.0},{m:'2025-09',s:273,m1:71.8,m2:70.0}],
+  LU:[{m:'2026-01',s:12,m1:0.0,m2:0.0},{m:'2025-12',s:29,m1:0.0,m2:0.0},{m:'2025-11',s:37,m1:24.3,m2:32.4},{m:'2025-10',s:46,m1:41.3,m2:58.7},{m:'2025-09',s:30,m1:26.7,m2:53.3}],
+  LV:[{m:'2026-04',s:28,m1:89.3,m2:75.0},{m:'2026-03',s:121,m1:74.4,m2:76.0},{m:'2026-02',s:140,m1:35.7,m2:69.3},{m:'2026-01',s:208,m1:67.3,m2:25.5},{m:'2025-12',s:123,m1:62.6,m2:65.9},{m:'2025-11',s:238,m1:71.8,m2:60.5},{m:'2025-10',s:209,m1:32.5,m2:73.7},{m:'2025-09',s:128,m1:14.1,m2:44.5}],
+  MT:[{m:'2026-04',s:97,m1:89.7,m2:75.3},{m:'2026-03',s:219,m1:89.5,m2:80.8},{m:'2026-02',s:186,m1:65.1,m2:84.9},{m:'2026-01',s:166,m1:89.2,m2:58.4},{m:'2025-12',s:134,m1:88.1,m2:77.6},{m:'2025-11',s:160,m1:86.3,m2:78.1},{m:'2025-10',s:199,m1:85.4,m2:78.9},{m:'2025-09',s:108,m1:77.8,m2:78.7}],
+  NO:[{m:'2026-04',s:51,m1:80.4,m2:68.6},{m:'2026-03',s:171,m1:67.8,m2:70.8},{m:'2026-02',s:220,m1:35.5,m2:70.5},{m:'2026-01',s:251,m1:62.2,m2:28.3},{m:'2025-12',s:182,m1:60.4,m2:69.2},{m:'2025-11',s:274,m1:58.8,m2:55.5},{m:'2025-10',s:345,m1:63.2,m2:54.5},{m:'2025-09',s:212,m1:54.2,m2:54.7}],
+  PL:[{m:'2026-04',s:219,m1:66.7,m2:38.8},{m:'2026-03',s:1146,m1:55.6,m2:51.8},{m:'2026-02',s:2094,m1:22.0,m2:38.1},{m:'2026-01',s:1464,m1:65.0,m2:16.8},{m:'2025-12',s:1812,m1:56.7,m2:45.3},{m:'2025-11',s:1877,m1:71.3,m2:52.1},{m:'2025-10',s:1758,m1:73.5,m2:60.0},{m:'2025-09',s:620,m1:49.5,m2:60.2}],
+  RS:[{m:'2026-04',s:128,m1:69.5,m2:50.8},{m:'2026-03',s:443,m1:78.3,m2:57.3},{m:'2026-02',s:563,m1:36.8,m2:55.2},{m:'2026-01',s:690,m1:75.8,m2:30.3},{m:'2025-12',s:957,m1:71.3,m2:59.7},{m:'2025-11',s:692,m1:72.5,m2:51.7},{m:'2025-10',s:627,m1:75.8,m2:58.9},{m:'2025-09',s:494,m1:81.4,m2:60.1}],
+  SE:[{m:'2026-04',s:68,m1:76.5,m2:44.1},{m:'2026-03',s:219,m1:73.5,m2:71.7},{m:'2026-02',s:313,m1:36.4,m2:70.0},{m:'2026-01',s:272,m1:66.9,m2:32.4},{m:'2025-12',s:351,m1:63.8,m2:70.7},{m:'2025-11',s:468,m1:59.0,m2:65.0},{m:'2025-10',s:571,m1:45.7,m2:46.6},{m:'2025-09',s:375,m1:54.4,m2:57.3}],
+  SI:[{m:'2026-04',s:46,m1:84.8,m2:56.5},{m:'2026-03',s:160,m1:81.9,m2:63.8},{m:'2026-02',s:123,m1:28.5,m2:60.2},{m:'2026-01',s:128,m1:69.5,m2:31.3},{m:'2025-12',s:59,m1:61.0,m2:62.7},{m:'2025-11',s:116,m1:73.3,m2:57.8},{m:'2025-10',s:165,m1:63.6,m2:60.6},{m:'2025-09',s:115,m1:79.1,m2:73.0}],
+  SK:[{m:'2026-04',s:51,m1:78.4,m2:51.0},{m:'2026-03',s:172,m1:66.9,m2:64.0},{m:'2026-02',s:282,m1:29.8,m2:66.0},{m:'2026-01',s:286,m1:72.7,m2:24.1},{m:'2025-12',s:319,m1:68.3,m2:58.6},{m:'2025-11',s:203,m1:71.9,m2:61.1},{m:'2025-10',s:247,m1:67.6,m2:46.6},{m:'2025-09',s:120,m1:61.7,m2:62.5}]
+};
 
 // ═══════════════════════════════════════════
 // STATE
@@ -741,6 +783,145 @@ function switchTab(name, el){
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('strip-bar').style.display = name==='countries' ? 'flex' : 'none';
   if(name==='regions') renderRegions();
+  if(name==='retention') renderRetention();
+}
+
+
+function retClass(v){return v>=75?'ret-high':v>=55?'ret-mid':'ret-low'}
+
+function renderRetention(){
+  const container = document.getElementById('retention-content');
+  if(!container) return;
+
+  // Compute per-market latest M1/M2 (skip Feb anomaly months)
+  const FEB_ANOMALY = '2026-02'; // cross-market Feb/Mar onboarding anomaly
+
+  function getLatestM1(data){
+    const filtered = data.filter(d=>d.m!==FEB_ANOMALY && d.s>20);
+    return filtered.length ? filtered[0] : data[0];
+  }
+
+  // Group markets by region
+  const regionGroups = {};
+  MARKETS.forEach(m=>{
+    const rk = REGION_MAP[m.id]||'OTHER';
+    if(!regionGroups[rk]) regionGroups[rk]=[];
+    regionGroups[rk].push(m);
+  });
+
+  let html = `<div style="margin-bottom:16px">
+    <h2 style="font-size:18px;font-weight:800;color:#111;margin:0 0 4px">Courier Retention — M1 &amp; M2 Cohort Trends</h2>
+    <p style="color:#6B7280;font-size:13px;margin:0 0 8px">Month-1 = % of couriers active in their 2nd calendar month. Month-2 = % active in their 3rd month. Cohort size (s) = new couriers who completed their first delivery.</p>
+    <div class="ret-feb-note">⚠️ Feb 2026 M1 figures are systematically low across all markets due to an onboarding flow change — treat with caution.</div>
+  </div>`;
+
+  // All markets table
+  html += `<div class="ret-section"><h3>All Markets — Latest Cohort Snapshot</h3>
+  <div style="overflow-x:auto"><table class="ret-table">
+  <thead><tr>
+    <th>Market</th><th>Region</th><th>Cohort</th><th>Size</th>
+    <th>M1 Retention</th><th>M2 Retention</th><th>Trend (M1)</th>
+  </tr></thead><tbody>`;
+
+  const sortedMarkets = [...MARKETS].sort((a,b)=>{
+    const da=RETENTION_DATA[a.id];
+    const db=RETENTION_DATA[b.id];
+    const va=da?getLatestM1(da).m1:-1;
+    const vb=db?getLatestM1(db).m1:-1;
+    return vb-va;
+  });
+
+  sortedMarkets.forEach(m=>{
+    const data = RETENTION_DATA[m.id];
+    if(!data||!data.length) return;
+    const latest = getLatestM1(data);
+    const rk = REGION_MAP[m.id]||'OTHER';
+    const rMeta = REGION_META[rk]||{label:rk};
+    // Trend: last 4 M1 values (non-Feb, min size 20)
+    const trendPts = data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(0,4).map(d=>d.m1);
+    const trendArrow = trendPts.length>=2 ? (trendPts[0]>trendPts[1]?'▲':'▼') : '—';
+    const trendCls = trendPts.length>=2 ? (trendPts[0]>trendPts[1]?'ret-high':'ret-low') : '';
+    html += `<tr>
+      <td><span class="flag">${m.flag}</span> ${m.country}</td>
+      <td><span class="rtag">${rMeta.label}</span></td>
+      <td style="color:#6B7280;font-size:12px">${latest.m}</td>
+      <td style="color:#6B7280">${latest.s.toLocaleString()}</td>
+      <td><span class="ret-m1 ${retClass(latest.m1)}">${latest.m1}%</span></td>
+      <td><span class="${retClass(latest.m2)}">${latest.m2}%</span></td>
+      <td><span class="${trendCls}" style="font-weight:600">${trendArrow} ${trendPts.length>=2?Math.abs(Math.round((trendPts[0]-trendPts[1])*10)/10)+'pp':''}</span></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div>`;
+
+  // Regional breakdown
+  html += `<div class="ret-section"><h3>Regional Cohort Trends (M1 by Month)</h3><div class="ret-region-grid">`;
+
+  Object.entries(REGION_META).forEach(([rk, rMeta])=>{
+    const markets = (regionGroups[rk]||[]).filter(m=>RETENTION_DATA[m.id]);
+    if(!markets.length) return;
+
+    // Collect all cohort months across this region
+    const monthSet = new Set();
+    markets.forEach(m=>RETENTION_DATA[m.id].forEach(d=>{if(d.m!==FEB_ANOMALY&&d.s>20)monthSet.add(d.m)}));
+    const months = [...monthSet].sort().reverse().slice(0,6);
+
+    html += `<div class="ret-rcard"><h4>${rMeta.label}</h4>
+    <table class="ret-table" style="font-size:12px">
+    <thead><tr><th>Market</th>${months.map(m=>`<th>${m.slice(2)}</th>`).join('')}</tr></thead>
+    <tbody>`;
+
+    markets.forEach(m=>{
+      const mdata = RETENTION_DATA[m.id]||[];
+      const byMonth = {};
+      mdata.forEach(d=>{byMonth[d.m]=d;});
+      html += `<tr><td><span class="flag">${m.flag}</span> ${m.country}</td>`;
+      months.forEach(mo=>{
+        const d = byMonth[mo];
+        if(d&&d.s>20&&d.m!==FEB_ANOMALY){
+          html += `<td><span class="${retClass(d.m1)}" style="font-weight:600">${d.m1}%</span></td>`;
+        } else {
+          html += `<td style="color:#D1D5DB">—</td>`;
+        }
+      });
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  html += `</div></div>`;
+
+  // Insights section
+  html += `<div class="ret-section"><h3>Key Observations</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">
+      <div style="font-weight:700;color:#15803D;margin-bottom:6px">🟢 Strong Retention Markets</div>
+      <ul style="margin:0;padding-left:16px;font-size:13px;color:#166534;line-height:1.8">
+        <li><strong>Cyprus & Malta</strong> — consistently M1 85–93%, M2 75–85%</li>
+        <li><strong>Germany</strong> — M1 88–94%, best in network outside Nordics</li>
+        <li><strong>Latvia & Lithuania</strong> — recent improvement to M1 80–90%</li>
+      </ul>
+    </div>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">
+      <div style="font-weight:700;color:#DC2626;margin-bottom:6px">🔴 Retention Risk Markets</div>
+      <ul style="margin:0;padding-left:16px;font-size:13px;color:#991B1B;line-height:1.8">
+        <li><strong>Kazakhstan</strong> — M2 consistently 40–47%, structural churn after M1</li>
+        <li><strong>Luxembourg</strong> — anomalous 0% M1/M2 in Dec–Jan, data quality risk</li>
+        <li><strong>Azerbaijan</strong> — M2 drops 15–20pp below M1, low stickiness</li>
+      </ul>
+    </div>
+    <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:14px">
+      <div style="font-weight:700;color:#C2410C;margin-bottom:6px">📉 Cross-Market Pattern: Feb 2026 Anomaly</div>
+      <div style="font-size:13px;color:#9A3412;line-height:1.6">All markets show suppressed M1 for Feb 2026 cohorts (often 20–40% vs. typical 60–90%). This correlates with an onboarding flow change and is not a true retention drop. Mar 2026 cohorts show recovery in most markets.</div>
+    </div>
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px">
+      <div style="font-weight:700;color:#1D4ED8;margin-bottom:6px">📊 M1 → M2 Degradation</div>
+      <div style="font-size:13px;color:#1E40AF;line-height:1.6">Markets with strong M1 (>80%) tend to show 10–25pp drop to M2 — normal cohort decay. Markets where M2 > M1 (e.g. Finland Mar 2026) indicate delayed activation rather than immediate engagement.</div>
+    </div>
+  </div></div>`;
+
+  container.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════
@@ -759,7 +940,7 @@ function getSorted(arr){
       case 'score':      av=a.score; bv=b.score; break;
       case 'ftdConv':    av=a.signals.ftdConv.v||0; bv=b.signals.ftdConv.v||0; break;
       case 'deliveries': av=a.signals.deliveries.v||0; bv=b.signals.deliveries.v||0; break;
-      case 'shiftCancel':av=a.signals.shiftCancel.v||0; bv=b.signals.shiftCancel.v||0; break;
+      case 'offerDecline':av=a.signals.offerDecline.v||0; bv=b.signals.offerDecline.v||0; break;
       case 'driver':     av=a.driver; bv=b.driver; break;
       case 'm1Impact':   av=a.m1weeks??99; bv=b.m1weeks??99; break;
       default: av=0;bv=0;
@@ -792,9 +973,9 @@ function renderCountries(){
       <td><span class="rtag">${regionLabel}</span></td>
       <td><span class="badge ${m.status}"><span class="bdot ${m.status}"></span>${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span></td>
       <td><div class="scwrap"><span class="scnum ${m.status}">${m.score}</span><div class="scbar"><div class="scfill ${m.status}" style="width:${m.score}%"></div></div>${scDelta(m.scoreDelta)}</div></td>
-      <td><div class="mwrap"><div class="mval">${s.ftdConv.v!=null?s.ftdConv.v+'%':'—'}</div>${s.ftdConv.v!=null?fmtD(s.ftdConv.d,'%',true):''}</div></td>
+      <td><div class="mwrap"><div class="mval">${s.ftdConv.na?'<span style="color:#9CA3AF;font-size:11px">N/A</span>':(s.ftdConv.v!=null?s.ftdConv.v+'%':'—')}</div>${(!s.ftdConv.na&&s.ftdConv.v!=null)?fmtD(s.ftdConv.d,'%',true):''}</div></td>
       <td><div class="mwrap"><div class="mval">${s.deliveries.v!=null?s.deliveries.v:'—'}</div>${s.deliveries.v!=null?fmtD(s.deliveries.d,'',true):''}</div></td>
-      <td><div class="mwrap"><div class="mval">${s.shiftCancel.v!=null?s.shiftCancel.v+'%':'—'}</div>${s.shiftCancel.v!=null?fmtD(s.shiftCancel.d,'%',false):''}</div></td>
+      <td><div class="mwrap"><div class="mval">${s.offerDecline.v!=null?s.offerDecline.v+'%':'—'}</div>${s.offerDecline.v!=null?fmtD(s.offerDecline.d,'%',false):''}</div></td>
       <td><div class="drtxt">${m.driver==='—'?'<span class="drnone">—</span>':m.driver}</div></td>
       <td>${m.m1weeks?`<span class="impill imp${Math.min(m.m1weeks,3)}">${m.m1weeks}w to M1</span>`:'<span class="impna">—</span>'}</td>
       <td><span class="chv ${isActive?'open':''}">▶</span></td>`;
@@ -817,7 +998,7 @@ function renderCountries(){
 
 function buildDetail(m){
   const s=m.signals;
-  const labels={ftdConv:'FTD conv. rate (7-day)',deliveries:'Avg. deliveries / courier / wk',ftdEarn:'Avg. weekly earnings (local currency)',dutyHours:'Avg. duty hours / courier / wk',shiftCancel:'Shift cancellation rate'};
+  const labels={ftdConv:'FTD conv. rate (7-day)',deliveries:'Avg. deliveries / courier / wk',ftdEarn:'Avg. weekly earnings (local currency)',dutyHours:'Avg. duty hours / courier / wk',offerDecline:'Offer decline rate (% of task offers rejected)'};
   let bars='';
   Object.entries(labels).forEach(([k,lbl])=>{
     const sg=s[k];
@@ -862,7 +1043,7 @@ function setFilter(f,el){
 
 function sortBy(key){
   if(currentSort.key===key){currentSort.dir*=-1;}
-  else{currentSort.key=key;currentSort.dir=key==='shiftCancel'||key==='status'?1:-1;}
+  else{currentSort.key=key;currentSort.dir=key==='offerDecline'||key==='status'?1:-1;}
   document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted'));
   document.querySelectorAll('th').forEach(th=>{
     const fn=th.getAttribute('onclick')||'';
