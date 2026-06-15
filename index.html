@@ -227,6 +227,72 @@ td{padding:10px 13px;vertical-align:middle}
 .ret-rcard h4{margin:0 0 10px;font-size:13px;font-weight:700;color:#374151}
 .ret-sparkline{width:100%;height:60px}
 
+/* ── Retention sub-nav ── */
+.ret-header{margin-bottom:14px}
+.ret-subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #E5E7EB}
+.ret-snbtn{padding:6px 13px;border:1px solid #E5E7EB;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;font-weight:500;color:#374151;transition:all 0.15s;white-space:nowrap}
+.ret-snbtn:hover{background:#F9FAFB;border-color:#D1D5DB}
+.ret-snbtn.active{background:#111;color:#fff;border-color:#111}
+.ret-view{display:none}
+.ret-view.active{display:block}
+
+/* ── Heatmap ── */
+.hm-wrap{overflow-x:auto}
+.hm-table{border-collapse:separate;border-spacing:2px;font-size:12px}
+.hm-table th{padding:5px 8px;font-weight:600;color:#6B7280;white-space:nowrap;text-align:center;font-size:11px}
+.hm-table th.hm-mkt{text-align:left}
+.hm-cell{padding:5px 8px;border-radius:5px;text-align:center;font-weight:700;white-space:nowrap;min-width:52px;font-size:12px}
+.hm-cell-mkt{padding:5px 8px;white-space:nowrap;font-size:12px;font-weight:500}
+.hm-feb{background:repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 4px,#fff 4px,#fff 8px)!important;color:#9CA3AF!important;font-size:10px!important}
+.hm-na{background:#F9FAFB;color:#D1D5DB;text-align:center}
+.hm-legend{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;font-size:11px;color:#6B7280}
+.hm-swatch{width:20px;height:14px;border-radius:3px;display:inline-block}
+
+/* ── Courier stock ── */
+.stock-total{background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;gap:20px;align-items:center}
+.stock-num{font-size:34px;font-weight:900;line-height:1}
+.stock-sub{font-size:12px;opacity:0.85;margin-top:3px}
+.stock-row{display:grid;grid-template-columns:120px 1fr 80px;align-items:center;gap:8px;margin-bottom:4px}
+.stock-bar-bg{background:#F3F4F6;border-radius:4px;height:20px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:11px;font-weight:700;color:#fff;transition:width 0.4s ease;min-width:2px}
+.stock-mkt{font-size:12px;font-weight:500;color:#374151;display:flex;align-items:center;gap:4px}
+.stock-val{font-size:12px;font-weight:700;color:#374151;text-align:right}
+
+/* ── Scatter / correlation ── */
+.scatter-wrap{overflow-x:auto;margin-bottom:12px}
+.scatter-svg{overflow:visible}
+.scatter-quad-label{font-size:10px;fill:#D1D5DB;font-style:italic}
+
+/* ── Benchmarks ── */
+.bench-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.bench-card{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px}
+.bench-card h4{margin:0 0 10px;font-size:13px;font-weight:700;color:#374151;display:flex;align-items:center;gap:6px}
+.bench-row{display:grid;grid-template-columns:110px 1fr 55px;align-items:center;gap:6px;margin-bottom:5px}
+.bench-bar-wrap{position:relative;height:18px;background:#F3F4F6;border-radius:4px;overflow:hidden}
+.bench-bar-pos{position:absolute;top:0;height:100%;background:#86EFAC;border-radius:0 4px 4px 0;transition:width 0.3s}
+.bench-bar-neg{position:absolute;top:0;right:0;height:100%;background:#FECACA;border-radius:4px 0 0 4px;transition:width 0.3s}
+.bench-median-tick{position:absolute;top:0;bottom:0;width:2px;background:#6B7280}
+.bench-delta{font-size:11px;font-weight:700;text-align:right}
+.bench-delta.pos{color:#16A34A}.bench-delta.neg{color:#DC2626}.bench-delta.neu{color:#9CA3AF}
+.bench-mkt{font-size:12px;font-weight:500;color:#374151}
+.bench-med-label{font-size:11px;color:#6B7280;margin-bottom:8px}
+
+/* ── Intervention tracker ── */
+.int-form{background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px}
+.int-form-grid{display:grid;grid-template-columns:1fr 1fr 140px 1fr auto;gap:8px;align-items:end}
+.int-flbl{font-size:11px;font-weight:600;color:#6B7280;display:block;margin-bottom:3px}
+.int-sel,.int-inp{width:100%;padding:7px 9px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;box-sizing:border-box}
+.int-add{padding:8px 16px;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+.int-add:hover{background:#333}
+.int-table{width:100%;border-collapse:collapse;font-size:13px}
+.int-table th{background:#F9FAFB;padding:7px 10px;font-weight:600;color:#374151;border-bottom:2px solid #E5E7EB;text-align:left;font-size:12px}
+.int-table td{padding:7px 10px;border-bottom:1px solid #F3F4F6;vertical-align:top;font-size:12px}
+.int-table tr:hover td{background:#FAFAFA}
+.int-del{cursor:pointer;color:#EF4444;font-size:11px;background:none;border:none;padding:2px 5px;border-radius:4px}
+.int-del:hover{background:#FEE2E2}
+.int-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:#EFF6FF;color:#1D4ED8}
+.int-empty{text-align:center;padding:30px;color:#9CA3AF;font-size:13px}
+
 </style>
 </head>
 <body>
@@ -284,6 +350,42 @@ td{padding:10px 13px;vertical-align:middle}
       </table>
     </div>
     <div class="tfoot">Source: Snowflake PRODUCTION · 5 signals vs. 8-week baseline · Data week 2026-06-01 · Click any row to inspect</div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        <span>When is the cohort date updated, and why do different markets show different months?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-body">
+        <p>The <strong>cohort date</strong> in the Retention tab is the calendar month when a batch of couriers made their <em>first ever delivery</em>. It is not the current date — it reflects when each group of new couriers joined the platform.</p>
+        <p>The most recent cohort shown per market is the latest one where M1 can already be computed. Computing M1 requires the following calendar month to have fully elapsed (so we know whether each courier was active in their second month). In practice this means the Retention data lags the current date by 4–8 weeks.</p>
+        <p>Different markets show different "latest" cohort months for three reasons:</p>
+        <ul>
+          <li><strong>Cohort size filter:</strong> Cohorts with fewer than 20 new couriers are excluded as statistically unreliable. Small markets (Iceland, Luxembourg) therefore show older dates because recent months didn't meet the minimum threshold.</li>
+          <li><strong>Feb 2026 anomaly:</strong> February 2026 cohorts are automatically excluded across all markets due to a known onboarding flow change that suppressed apparent M1 figures. Markets where March is the most recent non-excluded cohort will show "2026-03".</li>
+          <li><strong>Market launch date:</strong> Recently launched markets have fewer historical cohort months available.</li>
+        </ul>
+        <p>The Retention data is refreshed weekly alongside the main EWS signals, using the same Snowflake PRODUCTION tables.</p>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        <span>Why does FTD Conversion show 0% or N/A for some countries?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-body">
+        <p>The FTD (First-Time Delivery) Conversion Rate is defined as the percentage of newly onboarded couriers who complete a delivery within 7 days of activation. It is sourced from the <code>CONVERSION_7_DAYS</code> column in <code>COURIER_ONBOARDING_COHORT</code>.</p>
+        <p>Three distinct situations cause 0% or N/A to appear:</p>
+        <ul>
+          <li><strong>Austria (N/A):</strong> The <code>CONVERSION_7_DAYS</code> column is systematically empty (NULL / 0) for all Austrian couriers in the Snowflake table. This is a data pipeline gap — the metric is not tracked for Austria's onboarding flow. It does not reflect a real 0% conversion. Marked N/A to avoid misleading the score.</li>
+          <li><strong>Iceland &amp; Finland (N/A):</strong> Both are very small markets with 15–25 new couriers per week. A single week with no 7-day conversions in such a tiny cohort produces 0%, while the following week might show 100%. The metric swings between extremes with no statistical meaning. Marked N/A to prevent false critical signals from driving incorrect interventions.</li>
+          <li><strong>Any market showing a real 0%:</strong> If a larger market ever shows 0% FTD Conversion with a stable baseline above 0%, that is a genuine signal — it means no newly onboarded couriers completed a delivery in the current data week, which would be a serious early warning worth escalating immediately.</li>
+        </ul>
+        <p>The FTD conversion signal uses a higher-is-better direction: a drop below the 8-week baseline increases the risk score. N/A markets are excluded from score computation for that signal.</p>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -515,7 +617,7 @@ const MARKETS = [
    trend:[40.9,39.9,46.5,42.4,40.3,40.2,39.7,10.9],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
   {id:'FI',country:'Finland',flag:'🇫🇮',status:'critical',score:30.0,scoreDelta:0,
    signals:{
-     ftdConv:{v:0.0,b:64.7,d:-64.7,u:'%',hb:true},
+     ftdConv:{v:null,b:null,d:null,u:'%',hb:true,na:true},
      deliveries:{v:75.2,b:75.3,d:-0.1,u:'',hb:true},
      ftdEarn:{v:358.8,b:358.7,d:0.1,u:'',hb:true},
      dutyHours:{v:47.1,b:47.8,d:-0.8,u:'h',hb:true},
@@ -787,142 +889,460 @@ function switchTab(name, el){
 }
 
 
+// ═══════════════════════════════════════════
+// RETENTION HELPERS
+// ═══════════════════════════════════════════
+const FEB_ANOMALY = '2026-02';
+const ALL_MONTHS = ['2026-04','2026-03','2026-02','2026-01','2025-12','2025-11','2025-10','2025-09'];
+
 function retClass(v){return v>=75?'ret-high':v>=55?'ret-mid':'ret-low'}
 
-function renderRetention(){
-  const container = document.getElementById('retention-content');
-  if(!container) return;
+function m1Bg(v){
+  if(v===null||v===undefined) return '#F3F4F6';
+  if(v<40) return '#FEE2E2'; if(v<55) return '#FECACA';
+  if(v<65) return '#FEF9C3'; if(v<75) return '#DCFCE7'; return '#BBF7D0';
+}
+function m1Fg(v){
+  if(v===null||v===undefined) return '#9CA3AF';
+  if(v<40) return '#991B1B'; if(v<55) return '#9A3412';
+  if(v<65) return '#92400E'; if(v<75) return '#166534'; return '#14532D';
+}
 
-  // Compute per-market latest M1/M2 (skip Feb anomaly months)
-  const FEB_ANOMALY = '2026-02'; // cross-market Feb/Mar onboarding anomaly
+function getLatestM1(data){
+  const f = data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20);
+  return f.length ? f[0] : (data.length ? data[0] : null);
+}
 
-  function getLatestM1(data){
-    const filtered = data.filter(d=>d.m!==FEB_ANOMALY && d.s>20);
-    return filtered.length ? filtered[0] : data[0];
+function median(arr){
+  if(!arr.length) return null;
+  const s=[...arr].sort((a,b)=>a-b);
+  const m=Math.floor(s.length/2);
+  return s.length%2?s[m]:(s[m-1]+s[m])/2;
+}
+
+function makeSpark(marketId){
+  const data=RETENTION_DATA[marketId];
+  if(!data) return '<span style="color:#D1D5DB">—</span>';
+  const vals=data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).map(d=>d.m1).reverse();
+  if(vals.length<2) return '<span style="color:#D1D5DB">—</span>';
+  const W=72,H=22,mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>((i/(vals.length-1))*W).toFixed(1)+','+(H-((v-mn)/rng)*(H-5)-2.5).toFixed(1)).join(' ');
+  const col=vals[vals.length-1]>=vals[vals.length-2]?'#16A34A':'#DC2626';
+  return '<svg width="72" height="22" viewBox="0 0 72 22"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function calcStock(marketId){
+  const data=RETENTION_DATA[marketId];
+  if(!data) return 0;
+  return Math.round(data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(0,3).reduce((s,d)=>s+d.s*(d.m1/100),0));
+}
+
+function calcStockM2(marketId){
+  const data=RETENTION_DATA[marketId];
+  if(!data) return 0;
+  return Math.round(data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(0,3).reduce((s,d)=>s+d.s*(d.m2/100),0));
+}
+
+function switchRetView(name,el){
+  document.querySelectorAll('.ret-snbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.ret-view').forEach(v=>v.classList.remove('active'));
+  const pnl=document.getElementById('ret-view-'+name);
+  if(pnl){
+    pnl.classList.add('active');
+    const fn={overview:renderRetOverview,heatmap:renderRetHeatmap,stock:renderRetStock,
+              correlation:renderRetCorrelation,benchmarks:renderRetBenchmarks,interventions:renderRetInterventions};
+    if(fn[name]&&!pnl.dataset.rendered) fn[name]();
   }
+}
 
-  // Group markets by region
-  const regionGroups = {};
-  MARKETS.forEach(m=>{
-    const rk = REGION_MAP[m.id]||'OTHER';
-    if(!regionGroups[rk]) regionGroups[rk]=[];
-    regionGroups[rk].push(m);
-  });
+// ── MAIN ENTRY POINT ──
+function renderRetention(){
+  const container=document.getElementById('retention-content');
+  if(!container) return;
+  container.innerHTML=
+    '<div class="ret-header"><h2 style="font-size:17px;font-weight:800;color:#111;margin:0 0 3px">Courier Retention Analytics</h2>'+
+    '<p style="color:#6B7280;font-size:12px;margin:0">M1 = % active in 2nd month &nbsp;·&nbsp; M2 = % active in 3rd month &nbsp;·&nbsp; Feb 2026 cohorts excluded (onboarding anomaly)</p></div>'+
+    '<div class="ret-subnav">'+
+    '<button class="ret-snbtn active" onclick="switchRetView(\'overview\',this)">📋 Overview</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'heatmap\',this)">🔥 Cohort Heatmap</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'stock\',this)">📦 Courier Stock</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'correlation\',this)">📡 Signal → Outcome</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'benchmarks\',this)">⚖️ Regional Benchmarks</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'interventions\',this)">📝 Interventions</button>'+
+    '</div>'+
+    '<div id="ret-view-overview" class="ret-view active"></div>'+
+    '<div id="ret-view-heatmap" class="ret-view"></div>'+
+    '<div id="ret-view-stock" class="ret-view"></div>'+
+    '<div id="ret-view-correlation" class="ret-view"></div>'+
+    '<div id="ret-view-benchmarks" class="ret-view"></div>'+
+    '<div id="ret-view-interventions" class="ret-view"></div>';
+  renderRetOverview();
+}
 
-  let html = `<div style="margin-bottom:16px">
-    <h2 style="font-size:18px;font-weight:800;color:#111;margin:0 0 4px">Courier Retention — M1 &amp; M2 Cohort Trends</h2>
-    <p style="color:#6B7280;font-size:13px;margin:0 0 8px">Month-1 = % of couriers active in their 2nd calendar month. Month-2 = % active in their 3rd month. Cohort size (s) = new couriers who completed their first delivery.</p>
-    <div class="ret-feb-note">⚠️ Feb 2026 M1 figures are systematically low across all markets due to an onboarding flow change — treat with caution.</div>
-  </div>`;
+// ── OVERVIEW ──
+function renderRetOverview(){
+  const el=document.getElementById('ret-view-overview');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
 
-  // All markets table
-  html += `<div class="ret-section"><h3>All Markets — Latest Cohort Snapshot</h3>
-  <div style="overflow-x:auto"><table class="ret-table">
-  <thead><tr>
-    <th>Market</th><th>Region</th><th>Cohort</th><th>Size</th>
-    <th>M1 Retention</th><th>M2 Retention</th><th>Trend (M1)</th>
-  </tr></thead><tbody>`;
-
-  const sortedMarkets = [...MARKETS].sort((a,b)=>{
-    const da=RETENTION_DATA[a.id];
-    const db=RETENTION_DATA[b.id];
-    const va=da?getLatestM1(da).m1:-1;
-    const vb=db?getLatestM1(db).m1:-1;
+  const sorted=[...MARKETS].sort((a,b)=>{
+    const da=RETENTION_DATA[a.id],db=RETENTION_DATA[b.id];
+    const va=da?getLatestM1(da)?.m1??-1:-1;
+    const vb=db?getLatestM1(db)?.m1??-1:-1;
     return vb-va;
   });
 
-  sortedMarkets.forEach(m=>{
-    const data = RETENTION_DATA[m.id];
-    if(!data||!data.length) return;
-    const latest = getLatestM1(data);
-    const rk = REGION_MAP[m.id]||'OTHER';
-    const rMeta = REGION_META[rk]||{label:rk};
-    // Trend: last 4 M1 values (non-Feb, min size 20)
-    const trendPts = data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(0,4).map(d=>d.m1);
-    const trendArrow = trendPts.length>=2 ? (trendPts[0]>trendPts[1]?'▲':'▼') : '—';
-    const trendCls = trendPts.length>=2 ? (trendPts[0]>trendPts[1]?'ret-high':'ret-low') : '';
-    html += `<tr>
-      <td><span class="flag">${m.flag}</span> ${m.country}</td>
-      <td><span class="rtag">${rMeta.label}</span></td>
-      <td style="color:#6B7280;font-size:12px">${latest.m}</td>
-      <td style="color:#6B7280">${latest.s.toLocaleString()}</td>
-      <td><span class="ret-m1 ${retClass(latest.m1)}">${latest.m1}%</span></td>
-      <td><span class="${retClass(latest.m2)}">${latest.m2}%</span></td>
-      <td><span class="${trendCls}" style="font-weight:600">${trendArrow} ${trendPts.length>=2?Math.abs(Math.round((trendPts[0]-trendPts[1])*10)/10)+'pp':''}</span></td>
-    </tr>`;
+  let rows='';
+  sorted.forEach(m=>{
+    const data=RETENTION_DATA[m.id];
+    if(!data||!data.length){rows+='<tr><td><span class="flag">'+m.flag+'</span> '+m.country+'</td><td colspan="6" style="color:#D1D5DB;font-size:12px">No retention data</td></tr>';return;}
+    const latest=getLatestM1(data);
+    if(!latest) return;
+    const rk=REGION_MAP[m.id]||'OTHER';
+    const rMeta=REGION_META[rk]||{label:rk};
+    const prev=data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(1,2)[0];
+    const delta=prev?(latest.m1-prev.m1).toFixed(1):null;
+    const dCls=delta>0?'ret-high':delta<0?'ret-low':'ret-mid';
+    const dTxt=delta?(parseFloat(delta)>0?'▲ +':delta<0?'▼ ':'')+(Math.abs(delta))+'pp':'—';
+    rows+='<tr>'+
+      '<td><div style="display:flex;align-items:center;gap:5px"><span class="flag">'+m.flag+'</span><span style="font-size:12px;font-weight:500">'+m.country+'</span></div></td>'+
+      '<td><span class="rtag" style="font-size:10px">'+rMeta.label+'</span></td>'+
+      '<td style="color:#6B7280;font-size:11px">'+latest.m+'</td>'+
+      '<td style="color:#374151;font-size:12px">'+latest.s.toLocaleString()+'</td>'+
+      '<td><span class="ret-m1" style="font-weight:700;color:'+m1Fg(latest.m1)+'">'+latest.m1+'%</span></td>'+
+      '<td><span style="font-weight:600;color:'+m1Fg(latest.m2)+'">'+latest.m2+'%</span></td>'+
+      '<td>'+makeSpark(m.id)+'</td>'+
+      '<td><span class="'+dCls+'" style="font-size:11px;font-weight:600">'+dTxt+'</span></td>'+
+      '</tr>';
   });
 
-  html += `</tbody></table></div></div>`;
+  el.innerHTML='<div class="ret-section"><h3>All Markets — Latest Cohort</h3>'+
+    '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
+    '<th>Market</th><th>Region</th><th>Cohort</th><th>Size</th>'+
+    '<th>M1</th><th>M2</th><th style="min-width:80px">M1 Trend</th><th>vs Prev</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="ret-note" style="margin-top:8px">Trend line shows M1 over time (oldest→newest). Green = improving, Red = declining. "vs Prev" = change from previous cohort month.</div></div>'+
+    '<div class="ret-insights"><div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">'+
+    '<div style="font-weight:700;color:#15803D;margin-bottom:6px">🟢 Consistently Strong</div>'+
+    '<div style="font-size:13px;color:#166534;line-height:1.7"><strong>Cyprus & Malta</strong> — M1 85–93%, stable for 8+ months<br><strong>Germany</strong> — M1 88–94%, best large market<br><strong>Latvia & Lithuania</strong> — trending up to M1 80–90%</div></div>'+
+    '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">'+
+    '<div style="font-weight:700;color:#DC2626;margin-bottom:6px">🔴 Structural Risk</div>'+
+    '<div style="font-size:13px;color:#991B1B;line-height:1.7"><strong>Kazakhstan</strong> — M2 consistently 40–47%, high M1→M2 drop<br><strong>Azerbaijan</strong> — M2 15–20pp below M1 every cohort<br><strong>Luxembourg</strong> — Dec/Jan anomaly, low confidence</div></div></div>';
+}
 
-  // Regional breakdown
-  html += `<div class="ret-section"><h3>Regional Cohort Trends (M1 by Month)</h3><div class="ret-region-grid">`;
+// ── HEATMAP ──
+function renderRetHeatmap(){
+  const el=document.getElementById('ret-view-heatmap');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
 
-  Object.entries(REGION_META).forEach(([rk, rMeta])=>{
-    const markets = (regionGroups[rk]||[]).filter(m=>RETENTION_DATA[m.id]);
-    if(!markets.length) return;
+  const months=ALL_MONTHS;
+  // Sort markets by region then M1 descending
+  const sorted=[...MARKETS].sort((a,b)=>{
+    const ra=REGION_MAP[a.id]||'ZZZ',rb=REGION_MAP[b.id]||'ZZZ';
+    if(ra!==rb) return ra.localeCompare(rb);
+    const da=RETENTION_DATA[a.id],db=RETENTION_DATA[b.id];
+    return (getLatestM1(db)?.m1??0)-(getLatestM1(da)?.m1??0);
+  });
 
-    // Collect all cohort months across this region
-    const monthSet = new Set();
-    markets.forEach(m=>RETENTION_DATA[m.id].forEach(d=>{if(d.m!==FEB_ANOMALY&&d.s>20)monthSet.add(d.m)}));
-    const months = [...monthSet].sort().reverse().slice(0,6);
+  const legend='<div class="hm-legend">Color scale (M1%):<span class="hm-swatch" style="background:#FEE2E2"></span>&lt;40'+
+    '<span class="hm-swatch" style="background:#FECACA"></span>40–55'+
+    '<span class="hm-swatch" style="background:#FEF9C3"></span>55–65'+
+    '<span class="hm-swatch" style="background:#DCFCE7"></span>65–75'+
+    '<span class="hm-swatch" style="background:#BBF7D0"></span>&gt;75'+
+    '<span class="hm-swatch" style="background:repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 4px,#fff 4px,#fff 8px)"></span>Feb anomaly</div>';
 
-    html += `<div class="ret-rcard"><h4>${rMeta.label}</h4>
-    <table class="ret-table" style="font-size:12px">
-    <thead><tr><th>Market</th>${months.map(m=>`<th>${m.slice(2)}</th>`).join('')}</tr></thead>
-    <tbody>`;
+  let head='<tr><th class="hm-mkt">Market</th>';
+  months.forEach(m=>{
+    const lbl=m.slice(2).replace('-','/');
+    head+='<th style="text-align:center'+(m===FEB_ANOMALY?' color:#9CA3AF':'')+'">'+(m===FEB_ANOMALY?'⚠️ ':'')+lbl+'</th>';
+  });
+  head+='</tr>';
 
-    markets.forEach(m=>{
-      const mdata = RETENTION_DATA[m.id]||[];
-      const byMonth = {};
-      mdata.forEach(d=>{byMonth[d.m]=d;});
-      html += `<tr><td><span class="flag">${m.flag}</span> ${m.country}</td>`;
-      months.forEach(mo=>{
-        const d = byMonth[mo];
-        if(d&&d.s>20&&d.m!==FEB_ANOMALY){
-          html += `<td><span class="${retClass(d.m1)}" style="font-weight:600">${d.m1}%</span></td>`;
-        } else {
-          html += `<td style="color:#D1D5DB">—</td>`;
-        }
-      });
-      html += `</tr>`;
+  let body='',lastRegion='';
+  sorted.forEach(m=>{
+    const data=RETENTION_DATA[m.id];
+    const rk=REGION_MAP[m.id]||'OTHER';
+    if(rk!==lastRegion){
+      const rMeta=REGION_META[rk]||{label:rk};
+      body+='<tr><td colspan="'+(months.length+1)+'" style="background:#F9FAFB;padding:5px 8px;font-size:11px;font-weight:700;color:#6B7280;letter-spacing:0.05em">'+rMeta.label.toUpperCase()+'</td></tr>';
+      lastRegion=rk;
+    }
+    const byMonth={};
+    if(data) data.forEach(d=>{byMonth[d.m]=d;});
+    let row='<tr><td class="hm-cell-mkt"><span class="flag">'+m.flag+'</span> '+m.country+'</td>';
+    months.forEach(mo=>{
+      const d=byMonth[mo];
+      if(!d||d.s<=20){
+        row+='<td class="hm-cell hm-na">'+(d&&d.s>0?'<span style="font-size:9px">n='+d.s+'</span>':'—')+'</td>';
+      } else if(mo===FEB_ANOMALY){
+        row+='<td class="hm-cell hm-feb">'+d.m1+'%</td>';
+      } else {
+        const bg=m1Bg(d.m1),fg=m1Fg(d.m1);
+        row+='<td class="hm-cell" style="background:'+bg+';color:'+fg+'">'+d.m1+'%</td>';
+      }
+    });
+    row+='</tr>';
+    body+=row;
+  });
+
+  el.innerHTML='<div class="ret-section"><h3>Cohort Retention Heatmap (M1 %)</h3>'+
+    '<p class="ret-note" style="margin-bottom:10px">Each cell = M1 retention for couriers who joined that month. Striped cells = Feb 2026 onboarding anomaly (treat as unreliable). Grey = cohort too small (&lt;20 couriers).</p>'+
+    legend+'<div class="hm-wrap"><table class="hm-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div></div>';
+}
+
+// ── COURIER STOCK ──
+function renderRetStock(){
+  const el=document.getElementById('ret-view-stock');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
+
+  const rows=MARKETS.map(m=>({m,stock:calcStock(m.id),stockM2:calcStockM2(m.id)}))
+    .filter(r=>r.stock>0).sort((a,b)=>b.stock-a.stock);
+
+  const total=rows.reduce((s,r)=>s+r.stock,0);
+  const totalM2=rows.reduce((s,r)=>s+r.stockM2,0);
+  const maxStock=rows[0]?.stock||1;
+
+  let bars='';
+  rows.forEach(r=>{
+    const pct=Math.round((r.stock/maxStock)*100);
+    const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#3B82F6';
+    bars+='<div class="stock-row">'+
+      '<div class="stock-mkt"><span class="flag">'+r.m.flag+'</span>'+r.m.country+'</div>'+
+      '<div class="stock-bar-bg"><div class="stock-bar-fill" style="width:'+pct+'%;background:'+col+'">'+
+      (pct>20?r.stock.toLocaleString():'')+'</div></div>'+
+      '<div class="stock-val">'+(pct<=20?r.stock.toLocaleString():'')+'</div></div>';
+  });
+
+  el.innerHTML='<div class="ret-section">'+
+    '<h3>Active Courier Stock from Recent Onboarding</h3>'+
+    '<p class="ret-note" style="margin-bottom:14px">Estimated active couriers contributed by the last 3 cohort months, calculated as cohort_size × M1 retention rate. Represents the onboarding pipeline\'s ongoing contribution to the active fleet.</p>'+
+    '<div style="display:flex;gap:12px;margin-bottom:20px">'+
+    '<div class="stock-total" style="flex:1"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">Total M1-retained couriers<br>(last 3 cohorts, network)</div></div></div>'+
+    '<div class="stock-total" style="flex:1;background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">Total M2-retained couriers<br>(long-term sticky fleet)</div></div></div></div>'+
+    '<div class="stock-bar-wrap">'+bars+'</div>'+
+    '<p class="ret-note" style="margin-top:10px">Formula: Σ (cohort_size × M1%) for the 3 most recent non-Feb cohorts with ≥20 new couriers. Blue = stable, Orange = watch, Red = critical markets.</p></div>';
+}
+
+// ── SIGNAL → OUTCOME CORRELATION ──
+function renderRetCorrelation(){
+  const el=document.getElementById('ret-view-correlation');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
+
+  const pts=MARKETS.map(m=>{
+    const data=RETENTION_DATA[m.id];
+    if(!data) return null;
+    const latest=getLatestM1(data);
+    if(!latest) return null;
+    const od=m.signals.offerDecline;
+    if(!od||od.v===null) return null;
+    return {id:m.id,flag:m.flag,country:m.country,m1:latest.m1,delta:od.d,status:m.status,v:od.v};
+  }).filter(Boolean);
+
+  const W=520,H=290,ML=52,MR=20,MT=20,MB=42;
+  const pW=W-ML-MR,pH=H-MT-MB;
+  const xVals=pts.map(p=>p.delta),yVals=pts.map(p=>p.m1);
+  const xMin=Math.min(...xVals)-0.8,xMax=Math.max(...xVals)+0.8;
+  const yMin=Math.max(0,Math.min(...yVals)-8),yMax=Math.min(100,Math.max(...yVals)+8);
+  const medM1=median(yVals);
+
+  function px(v){return ML+(v-xMin)/(xMax-xMin)*pW;}
+  function py(v){return MT+(yMax-v)/(yMax-yMin)*pH;}
+
+  let svg='<svg class="scatter-svg" viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:540px">';
+
+  // Quad backgrounds
+  const zx=px(0),my=py(medM1);
+  svg+='<rect x="'+ML+'" y="'+MT+'" width="'+(zx-ML)+'" height="'+(my-MT)+'" fill="#F0FDF4" opacity="0.5"/>'; // top-left: healthy
+  svg+='<rect x="'+zx+'" y="'+my+'" width="'+(W-MR-zx)+'" height="'+(H-MB-my)+'" fill="#FEF2F2" opacity="0.5"/>'; // bottom-right: risk
+
+  // Grid
+  [0.25,0.5,0.75].forEach(f=>{
+    const gy=MT+f*pH;
+    svg+='<line x1="'+ML+'" y1="'+gy+'" x2="'+(W-MR)+'" y2="'+gy+'" stroke="#E5E7EB" stroke-width="1"/>';
+  });
+
+  // Reference lines
+  svg+='<line x1="'+zx+'" y1="'+MT+'" x2="'+zx+'" y2="'+(H-MB)+'" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4,3"/>';
+  svg+='<line x1="'+ML+'" y1="'+my+'" x2="'+(W-MR)+'" y2="'+my+'" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4,3"/>';
+  svg+='<text class="scatter-quad-label" x="'+(ML+4)+'" y="'+(MT+14)+'">Healthy</text>';
+  svg+='<text class="scatter-quad-label" x="'+(zx+4)+'" y="'+(H-MB-6)+'">At risk</text>';
+
+  // Axes
+  svg+='<line x1="'+ML+'" y1="'+MT+'" x2="'+ML+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
+  svg+='<line x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
+
+  // X ticks
+  for(let t=Math.ceil(xMin);t<=Math.floor(xMax);t++){
+    const tx=px(t);
+    svg+='<line x1="'+tx+'" y1="'+(H-MB)+'" x2="'+tx+'" y2="'+(H-MB+4)+'" stroke="#D1D5DB" stroke-width="1"/>';
+    svg+='<text x="'+tx+'" y="'+(H-MB+14)+'" text-anchor="middle" font-size="9" fill="#9CA3AF">'+(t>0?'+':'')+t+'</text>';
+  }
+  // Y ticks
+  [30,40,50,60,70,80,90].forEach(v=>{
+    if(v>=yMin&&v<=yMax){
+      const ty=py(v);
+      svg+='<text x="'+(ML-4)+'" y="'+(ty+4)+'" text-anchor="end" font-size="9" fill="#9CA3AF">'+v+'%</text>';
+    }
+  });
+
+  // Points
+  pts.forEach(p=>{
+    const cx=px(p.delta).toFixed(1),cy=py(p.m1).toFixed(1);
+    const col=p.status==='critical'?'#EF4444':p.status==='watch'?'#F97316':'#10B981';
+    svg+='<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+col+'" opacity="0.75" stroke="#fff" stroke-width="1.5"/>';
+    svg+='<text x="'+(parseFloat(cx)+9)+'" y="'+(parseFloat(cy)+4)+'" font-size="11">'+p.flag+'</text>';
+  });
+
+  // Axis labels
+  svg+='<text x="'+(ML+pW/2)+'" y="'+(H-2)+'" text-anchor="middle" font-size="10" fill="#6B7280">Offer Decline vs 8-wk Baseline (pp)</text>';
+  svg+='<text x="14" y="'+(MT+pH/2)+'" text-anchor="middle" font-size="10" fill="#6B7280" transform="rotate(-90,14,'+(MT+pH/2)+')">Latest M1 Retention (%)</text>';
+  svg+='</svg>';
+
+  // Top 5 at-risk table
+  const atRisk=[...pts].filter(p=>p.delta>0).sort((a,b)=>(b.delta-b.m1/20)-(a.delta-a.m1/20)).slice(0,6);
+  let tbl='<table class="ret-table" style="margin-top:14px;font-size:12px"><thead><tr>'+
+    '<th>Market</th><th>Offer Decline Δ</th><th>Current Decline Rate</th><th>Latest M1</th><th>Status</th></tr></thead><tbody>';
+  atRisk.forEach(p=>{
+    tbl+='<tr><td><span class="flag">'+p.flag+'</span> '+p.country+'</td>'+
+      '<td><span style="color:#DC2626;font-weight:700">+'+p.delta+'pp</span></td>'+
+      '<td>'+p.v+'%</td>'+
+      '<td><span style="color:'+m1Fg(p.m1)+';font-weight:700">'+p.m1+'%</span></td>'+
+      '<td><span class="badge '+p.status+'"><span class="bdot '+p.status+'"></span>'+p.status+'</span></td></tr>';
+  });
+  tbl+='</tbody></table>';
+
+  el.innerHTML='<div class="ret-section"><h3>Offer Decline Elevation vs. M1 Retention</h3>'+
+    '<p class="ret-note" style="margin-bottom:12px">Each bubble = one market. X axis = how much this week\'s offer decline deviates from its 8-week baseline. Y axis = latest cohort M1 retention. Green shading = healthy quadrant (low elevation, high retention). Red shading = at-risk quadrant.</p>'+
+    '<div class="scatter-wrap">'+svg+'</div>'+
+    '<div class="ret-note" style="margin-bottom:14px">● Green = Stable &nbsp;·&nbsp; ● Orange = Watch &nbsp;·&nbsp; ● Red = Critical &nbsp;·&nbsp; Dashed lines = zero deviation (vertical) and median M1 (horizontal)</div>'+
+    '<h3>Markets with Highest Combined Risk</h3>'+tbl+
+    '<p class="ret-note" style="margin-top:8px">Ranked by offer decline elevation. These markets are showing early disengagement signals that historically precede M1 drops in 4–6 weeks.</p></div>';
+}
+
+// ── REGIONAL BENCHMARKS ──
+function renderRetBenchmarks(){
+  const el=document.getElementById('ret-view-benchmarks');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
+
+  const ORDER=['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH','OTHER'];
+  let cards='';
+
+  ORDER.forEach(rk=>{
+    const rMeta=REGION_META[rk];
+    if(!rMeta) return;
+    const markets=MARKETS.filter(m=>REGION_MAP[m.id]===rk);
+    const mktData=markets.map(m=>{
+      const data=RETENTION_DATA[m.id];
+      if(!data) return null;
+      const latest=getLatestM1(data);
+      return latest?{m,m1:latest.m1,m2:latest.m2,cohort:latest.m}:null;
+    }).filter(Boolean);
+    if(!mktData.length) return;
+
+    const med=median(mktData.map(d=>d.m1));
+    const maxDev=Math.max(...mktData.map(d=>Math.abs(d.m1-med)),1);
+
+    let rows='';
+    [...mktData].sort((a,b)=>b.m1-a.m1).forEach(d=>{
+      const dev=(d.m1-med).toFixed(1);
+      const barPct=Math.round((Math.abs(parseFloat(dev))/maxDev)*45);
+      const isPos=parseFloat(dev)>=0;
+      const devcls=Math.abs(parseFloat(dev))<2?'neu':isPos?'pos':'neg';
+      rows+='<div class="bench-row">'+
+        '<div class="bench-mkt"><span class="flag">'+d.m.flag+'</span>'+d.m.country+'</div>'+
+        '<div style="position:relative;height:20px;background:#F3F4F6;border-radius:4px;overflow:hidden">'+
+        '<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#D1D5DB"></div>'+
+        (isPos?
+          '<div style="position:absolute;top:2px;bottom:2px;left:50%;width:'+barPct+'%;background:#86EFAC;border-radius:0 3px 3px 0"></div>':
+          '<div style="position:absolute;top:2px;bottom:2px;right:50%;width:'+barPct+'%;background:#FECACA;border-radius:3px 0 0 3px"></div>')+
+        '</div>'+
+        '<div class="bench-delta '+devcls+'">'+(parseFloat(dev)>0?'+':'')+dev+'pp</div></div>';
     });
 
-    html += `</tbody></table></div>`;
+    cards+='<div class="bench-card"><h4>'+rMeta.label+
+      '<span style="margin-left:auto;font-size:11px;font-weight:400;color:#9CA3AF">Median M1: <strong style="color:#374151">'+med.toFixed(1)+'%</strong></span></h4>'+
+      '<div class="bench-med-label">Bar shows deviation from regional median. Green = above, Red = below.</div>'+rows+'</div>';
   });
 
-  html += `</div></div>`;
-
-  // Insights section
-  html += `<div class="ret-section"><h3>Key Observations</h3>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">
-      <div style="font-weight:700;color:#15803D;margin-bottom:6px">🟢 Strong Retention Markets</div>
-      <ul style="margin:0;padding-left:16px;font-size:13px;color:#166534;line-height:1.8">
-        <li><strong>Cyprus & Malta</strong> — consistently M1 85–93%, M2 75–85%</li>
-        <li><strong>Germany</strong> — M1 88–94%, best in network outside Nordics</li>
-        <li><strong>Latvia & Lithuania</strong> — recent improvement to M1 80–90%</li>
-      </ul>
-    </div>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">
-      <div style="font-weight:700;color:#DC2626;margin-bottom:6px">🔴 Retention Risk Markets</div>
-      <ul style="margin:0;padding-left:16px;font-size:13px;color:#991B1B;line-height:1.8">
-        <li><strong>Kazakhstan</strong> — M2 consistently 40–47%, structural churn after M1</li>
-        <li><strong>Luxembourg</strong> — anomalous 0% M1/M2 in Dec–Jan, data quality risk</li>
-        <li><strong>Azerbaijan</strong> — M2 drops 15–20pp below M1, low stickiness</li>
-      </ul>
-    </div>
-    <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:14px">
-      <div style="font-weight:700;color:#C2410C;margin-bottom:6px">📉 Cross-Market Pattern: Feb 2026 Anomaly</div>
-      <div style="font-size:13px;color:#9A3412;line-height:1.6">All markets show suppressed M1 for Feb 2026 cohorts (often 20–40% vs. typical 60–90%). This correlates with an onboarding flow change and is not a true retention drop. Mar 2026 cohorts show recovery in most markets.</div>
-    </div>
-    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px">
-      <div style="font-weight:700;color:#1D4ED8;margin-bottom:6px">📊 M1 → M2 Degradation</div>
-      <div style="font-size:13px;color:#1E40AF;line-height:1.6">Markets with strong M1 (>80%) tend to show 10–25pp drop to M2 — normal cohort decay. Markets where M2 > M1 (e.g. Finland Mar 2026) indicate delayed activation rather than immediate engagement.</div>
-    </div>
-  </div></div>`;
-
-  container.innerHTML = html;
+  el.innerHTML='<div class="ret-section"><h3>M1 Retention vs. Regional Median</h3>'+
+    '<p class="ret-note" style="margin-bottom:14px">Each bar shows how far a market\'s latest M1 sits above or below its region\'s median. Helps identify outliers within a region — a market 10pp below peers is a stronger signal than the same absolute number in isolation.</p>'+
+    '<div class="bench-grid">'+cards+'</div></div>';
 }
+
+// ── INTERVENTIONS ──
+function renderRetInterventions(){
+  const el=document.getElementById('ret-view-interventions');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
+
+  function getInterventions(){
+    try{return JSON.parse(localStorage.getItem('ews_interventions')||'[]');}catch(e){return [];}
+  }
+  function saveInterventions(arr){
+    try{localStorage.setItem('ews_interventions',JSON.stringify(arr));}catch(e){}
+  }
+
+  function buildTable(items){
+    if(!items.length) return '<div class="int-empty">No interventions logged yet. Add your first one above.</div>';
+    let rows='';
+    [...items].sort((a,b)=>b.date.localeCompare(a.date)).forEach((item,i)=>{
+      const m=MARKETS.find(x=>x.id===item.market);
+      rows+='<tr>'+
+        '<td><span class="flag">'+(m?m.flag:'')+'</span> '+(m?m.country:item.market)+'</td>'+
+        '<td><span class="int-tag">'+item.type+'</span></td>'+
+        '<td>'+item.date+'</td>'+
+        '<td>'+item.notes+'</td>'+
+        '<td><button class="int-del" onclick="deleteIntervention('+i+')">✕</button></td></tr>';
+    });
+    return '<table class="int-table"><thead><tr><th>Market</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  function refresh(){
+    document.getElementById('int-table-area').innerHTML=buildTable(getInterventions());
+  }
+
+  window.addIntervention=function(){
+    const market=document.getElementById('int-market').value;
+    const type=document.getElementById('int-type').value;
+    const date=document.getElementById('int-date').value;
+    const notes=document.getElementById('int-notes').value.trim();
+    if(!market||!date){alert('Please select a market and date.');return;}
+    const arr=getInterventions();
+    arr.push({market,type,date,notes});
+    saveInterventions(arr);
+    document.getElementById('int-notes').value='';
+    refresh();
+  };
+
+  window.deleteIntervention=function(idx){
+    const arr=getInterventions();
+    arr.splice(idx,1);
+    saveInterventions(arr);
+    refresh();
+    document.getElementById('ret-view-interventions').dataset.rendered='';
+    renderRetInterventions();
+  };
+
+  const mktOptions=MARKETS.map(m=>'<option value="'+m.id+'">'+m.flag+' '+m.country+'</option>').join('');
+  const today=new Date().toISOString().slice(0,10);
+
+  el.innerHTML='<div class="ret-section"><h3>CRM Intervention Tracker</h3>'+
+    '<p class="ret-note" style="margin-bottom:14px">Log CRM interventions deployed per market. Stored in your browser — compare against subsequent cohort M1 to measure impact.</p>'+
+    '<div class="int-form"><div class="int-form-grid">'+
+    '<div><label class="int-flbl">Market</label><select class="int-sel" id="int-market"><option value="">Select market…</option>'+mktOptions+'</select></div>'+
+    '<div><label class="int-flbl">Intervention type</label><select class="int-sel" id="int-type"><option>Push notification</option><option>Email campaign</option><option>In-app message</option><option>Earnings incentive</option><option>Onboarding sequence</option><option>Reactivation flow</option><option>Other</option></select></div>'+
+    '<div><label class="int-flbl">Date deployed</label><input type="date" class="int-inp" id="int-date" value="'+today+'"></div>'+
+    '<div><label class="int-flbl">Notes / details</label><input type="text" class="int-inp" id="int-notes" placeholder="e.g. Milestone push weeks 2–4…"></div>'+
+    '<div><button class="int-add" onclick="addIntervention()">+ Log</button></div>'+
+    '</div></div>'+
+    '<div id="int-table-area">'+buildTable(getInterventions())+'</div></div>';
+}
+
 
 // ═══════════════════════════════════════════
 // COUNTRIES
