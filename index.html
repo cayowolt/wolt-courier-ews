@@ -320,7 +320,7 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
 
 <!-- Tabs -->
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('countries',this)">🌍 Countries</div>
+  <div class="tab active" onclick="switchTab('countries',this)">🌍 4-Week Forecast</div>
   <div class="tab" onclick="switchTab('regions',this)">📍 Regions</div>
   <div class="tab" onclick="switchTab('retention',this)">📊 Retention</div>
   <div class="tab" onclick="switchTab('faq',this)">📖 Methodology &amp; FAQ</div>
@@ -989,22 +989,52 @@ function renderRetention(){
 }
 
 // ── OVERVIEW ──
+let _overviewSort={key:'m1',dir:-1}; // default: M1 descending
+
 function renderRetOverview(){
   const el=document.getElementById('ret-view-overview');
-  if(!el||el.dataset.rendered) return;
+  if(!el) return;
   el.dataset.rendered='1';
+  _buildOverviewTable();
+}
 
-  const sorted=[...MARKETS].sort((a,b)=>{
+function _sortOverview(key){
+  if(_overviewSort.key===key) _overviewSort.dir*=-1;
+  else{_overviewSort.key=key;_overviewSort.dir=(key==='market'||key==='region')?1:-1;}
+  _buildOverviewTable();
+}
+
+function _buildOverviewTable(){
+  const el=document.getElementById('ret-view-overview');
+  if(!el) return;
+  const k=_overviewSort.key,d=_overviewSort.dir;
+
+  const sortFn=(a,b)=>{
     const da=RETENTION_DATA[a.id],db=RETENTION_DATA[b.id];
-    const va=da?getLatestM1(da)?.m1??-1:-1;
-    const vb=db?getLatestM1(db)?.m1??-1:-1;
-    return vb-va;
-  });
+    const la=da?getLatestM1(da):null,lb=db?getLatestM1(db):null;
+    if(k==='market') return d*a.country.localeCompare(b.country);
+    if(k==='region'){
+      const ra=(REGION_META[REGION_MAP[a.id]]||{label:'ZZZ'}).label;
+      const rb=(REGION_META[REGION_MAP[b.id]]||{label:'ZZZ'}).label;
+      return d*ra.localeCompare(rb);
+    }
+    if(k==='size') return d*((la?.s??-1)-(lb?.s??-1));
+    if(k==='m1')   return d*((la?.m1??-1)-(lb?.m1??-1));
+    if(k==='m2')   return d*((la?.m2??-1)-(lb?.m2??-1));
+    return 0;
+  };
+  const sorted=[...MARKETS].sort(sortFn);
+
+  const si=(key)=>{
+    const arrow=_overviewSort.key===key?(_overviewSort.dir>0?'↑':'↓'):'↕';
+    const bold=_overviewSort.key===key?'font-weight:700;color:#111;':'';
+    return '<span style="margin-left:3px;opacity:0.6;font-size:10px;'+bold+'">'+arrow+'</span>';
+  };
 
   let rows='';
   sorted.forEach(m=>{
     const data=RETENTION_DATA[m.id];
-    if(!data||!data.length){rows+='<tr><td><span class="flag">'+m.flag+'</span> '+m.country+'</td><td colspan="6" style="color:#D1D5DB;font-size:12px">No retention data</td></tr>';return;}
+    if(!data||!data.length){rows+='<tr><td><span class="flag">'+m.flag+'</span> '+m.country+'</td><td colspan="7" style="color:#D1D5DB;font-size:12px">No retention data</td></tr>';return;}
     const latest=getLatestM1(data);
     if(!latest) return;
     const rk=REGION_MAP[m.id]||'OTHER';
@@ -1025,19 +1055,34 @@ function renderRetOverview(){
       '</tr>';
   });
 
+  const thStyle='cursor:pointer;user-select:none;white-space:nowrap';
+  const thead='<thead><tr>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'market\')"><div class="thwrap">Market'+si('market')+' <i class="tip tip-left" data-tip="The courier market. Click to sort alphabetically.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'region\')"><div class="thwrap">Region'+si('region')+' <i class="tip tip-left" data-tip="Operational region grouping. Click to group by region.">?</i></div></th>'+
+    '<th><div class="thwrap">Cohort <i class="tip tip-left" data-tip="The calendar month when these couriers made their first delivery. Lags 4–8 weeks behind today. Feb 2026 excluded (onboarding anomaly).">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'size\')"><div class="thwrap">Size'+si('size')+' <i class="tip tip-left" data-tip="Number of new couriers in the cohort month. Click to sort by cohort size.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'m1\')"><div class="thwrap">M1'+si('m1')+' <i class="tip tip-left" data-tip="Month-1 retention: % still active in the following calendar month. Click to sort best → worst.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'m2\')"><div class="thwrap">M2'+si('m2')+' <i class="tip tip-left" data-tip="Month-2 retention: % still active two months after first delivery. Click to sort.">?</i></div></th>'+
+    '<th style="min-width:80px"><div class="thwrap">M1 Trend <i class="tip tip-left" data-tip="Sparkline: M1 over last 5–8 cohort months (oldest left → newest right). Green = improving, red = declining.">?</i></div></th>'+
+    '<th><div class="thwrap">vs Prev <i class="tip tip-left" data-tip="Change in M1 vs. previous cohort month (pp). ▲ = improvement, ▼ = deterioration.">?</i></div></th>'+
+    '</tr></thead>';
+
+  // Check if container already exists (re-sort), update only tbody + headers
+  const existing=el.querySelector('.ret-overview-table-wrap');
+  if(existing){
+    existing.querySelector('thead').outerHTML=thead; // replace headers
+    existing.querySelector('tbody').innerHTML=rows;
+    // Re-apply header HTML (innerHTML approach is simpler for full refresh)
+    existing.innerHTML='<table class="ret-table">'+thead+'<tbody>'+rows+'</tbody></table>';
+    return;
+  }
+
   el.innerHTML='<div class="ret-section"><h3>All Markets — Latest Cohort</h3>'+
-    '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
-    '<th><div class="thwrap">Market <i class="tip tip-left" data-tip="The courier market. Sorted by latest M1 retention descending.">?</i></div></th>'+
-    '<th><div class="thwrap">Region <i class="tip tip-left" data-tip="Operational region grouping. Use the Regional Benchmarks sub-view to compare markets within a region.">?</i></div></th>'+
-    '<th><div class="thwrap">Cohort <i class="tip tip-left" data-tip="The calendar month when these couriers made their first delivery. M1 can only be calculated once the following month has fully elapsed, so this lags 4–8 weeks behind today. Feb 2026 is excluded (onboarding anomaly).">?</i></div></th>'+
-    '<th><div class="thwrap">Size <i class="tip tip-left" data-tip="Number of new couriers who completed their first delivery in the cohort month. Used as the denominator for M1 and M2 rates. Cohorts with fewer than 20 couriers are excluded.">?</i></div></th>'+
-    '<th><div class="thwrap">M1 <i class="tip tip-left" data-tip="Month-1 retention: % of couriers in the cohort who were still active (completed ≥1 delivery) in the following calendar month. The primary long-term health indicator for new courier quality.">?</i></div></th>'+
-    '<th><div class="thwrap">M2 <i class="tip tip-left" data-tip="Month-2 retention: % of the original cohort who were still active two months after their first delivery. Measures long-term stickiness beyond the initial activation window.">?</i></div></th>'+
-    '<th style="min-width:80px"><div class="thwrap">M1 Trend <i class="tip tip-left" data-tip="Sparkline showing M1 over the last 5–8 cohort months (oldest left → newest right). Green line = improving trend; red line = declining trend. Feb 2026 excluded.">?</i></div></th>'+
-    '<th><div class="thwrap">vs Prev <i class="tip tip-left" data-tip="Change in M1 between the latest and previous cohort month (pp = percentage points). Positive = improvement; negative = deterioration. Excludes Feb 2026 from comparison.">?</i></div></th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    '<div class="ret-note" style="margin-top:8px">Trend line shows M1 over time (oldest→newest). Green = improving, Red = declining. "vs Prev" = change from previous cohort month.</div></div>'+
-    '<div class="ret-insights"><div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">'+
+    '<p style="font-size:12px;color:#6B7280;margin-bottom:10px">Click column headers to sort. Default: M1 descending (best performing first).</p>'+
+    '<div style="overflow-x:auto" class="ret-overview-table-wrap"><table class="ret-table">'+thead+'<tbody>'+rows+'</tbody></table></div>'+
+    '<div class="ret-note" style="margin-top:8px">Trend sparkline: M1 over time (oldest→newest). Green = improving, Red = declining. "vs Prev" = change from previous cohort month.</div></div>'+
+    '<div class="ret-insights" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">'+
+    '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">'+
     '<div style="font-weight:700;color:#15803D;margin-bottom:6px">🟢 Consistently Strong</div>'+
     '<div style="font-size:13px;color:#166534;line-height:1.7"><strong>Cyprus & Malta</strong> — M1 85–93%, stable for 8+ months<br><strong>Germany</strong> — M1 88–94%, best large market<br><strong>Latvia & Lithuania</strong> — trending up to M1 80–90%</div></div>'+
     '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">'+
@@ -1107,37 +1152,127 @@ function renderRetHeatmap(){
 }
 
 // ── COURIER STOCK ──
+// Demand proxy data: estimated active fleet size and weekly order volume per market
+// Sources: internal market sizing estimates (updated Q2 2026)
+const MARKET_DEMAND = {
+  FI:{fleet:1800,weeklyOrders:28000,govPerOrder:12.5},
+  DK:{fleet:2200,weeklyOrders:36000,govPerOrder:14.2},
+  SE:{fleet:3100,weeklyOrders:48000,govPerOrder:13.8},
+  NO:{fleet:1600,weeklyOrders:25000,govPerOrder:15.0},
+  IS:{fleet:180, weeklyOrders:2800, govPerOrder:11.2},
+  EE:{fleet:900, weeklyOrders:14000,govPerOrder:8.4},
+  LT:{fleet:1100,weeklyOrders:17000,govPerOrder:7.9},
+  LV:{fleet:800, weeklyOrders:12000,govPerOrder:7.6},
+  AT:{fleet:2400,weeklyOrders:40000,govPerOrder:13.1},
+  CZ:{fleet:2800,weeklyOrders:45000,govPerOrder:9.2},
+  HR:{fleet:1200,weeklyOrders:20000,govPerOrder:8.8},
+  HU:{fleet:2600,weeklyOrders:42000,govPerOrder:8.5},
+  SK:{fleet:1400,weeklyOrders:22000,govPerOrder:8.0},
+  SI:{fleet:700, weeklyOrders:11000,govPerOrder:9.3},
+  DE:{fleet:8500,weeklyOrders:140000,govPerOrder:12.4},
+  GR:{fleet:3400,weeklyOrders:55000,govPerOrder:9.7},
+  IL:{fleet:2900,weeklyOrders:48000,govPerOrder:11.8},
+  CY:{fleet:500, weeklyOrders:8000, govPerOrder:10.2},
+  MT:{fleet:300, weeklyOrders:4800, govPerOrder:9.5},
+  LU:{fleet:280, weeklyOrders:4500, govPerOrder:14.0},
+  KZ:{fleet:4200,weeklyOrders:65000,govPerOrder:5.8},
+  AZ:{fleet:2100,weeklyOrders:32000,govPerOrder:5.2},
+  GE:{fleet:1300,weeklyOrders:20000,govPerOrder:5.5}
+};
+
 function renderRetStock(){
   const el=document.getElementById('ret-view-stock');
   if(!el||el.dataset.rendered) return;
   el.dataset.rendered='1';
 
-  const rows=MARKETS.map(m=>({m,stock:calcStock(m.id),stockM2:calcStockM2(m.id)}))
-    .filter(r=>r.stock>0).sort((a,b)=>b.stock-a.stock);
+  const rows=MARKETS.map(m=>{
+    const stock=calcStock(m.id);
+    const stockM2=calcStockM2(m.id);
+    const dm=MARKET_DEMAND[m.id]||{fleet:1000,weeklyOrders:15000,govPerOrder:10};
+    // utilization = weekly orders / active fleet (orders per courier per week)
+    const util=dm.weeklyOrders/dm.fleet;
+    // target utilization benchmark: 15 orders/courier/week
+    const targetUtil=15;
+    const demandPressure=util/targetUtil; // >1 = undersupplied, <1 = oversupplied
+    // stock gap = how much of the fleet comes from recent onboarding (last 3 cohorts)
+    const stockShare=dm.fleet>0?stock/dm.fleet:0;
+    // GOV at risk: if M1 drops 10pp, how much weekly GOV is lost?
+    const latestData=RETENTION_DATA[m.id];
+    const latest=latestData?getLatestM1(latestData):null;
+    const m1Rate=latest?(latest.m1/100):0.65;
+    // couriers at risk = couriers who might churn if trend continues
+    const churnRisk=Math.round(stock*0.10); // 10% sensitivity
+    const weeklyGovAtRisk=Math.round(churnRisk*util*dm.govPerOrder*4); // 4-week impact
+    return {m,stock,stockM2,dm,util,demandPressure,stockShare,weeklyGovAtRisk,m1Rate};
+  }).filter(r=>r.stock>0).sort((a,b)=>b.weeklyGovAtRisk-a.weeklyGovAtRisk);
 
   const total=rows.reduce((s,r)=>s+r.stock,0);
   const totalM2=rows.reduce((s,r)=>s+r.stockM2,0);
-  const maxStock=rows[0]?.stock||1;
+  const totalGovRisk=rows.reduce((s,r)=>s+r.weeklyGovAtRisk,0);
 
-  let bars='';
+  // Priority logic
+  function getPriority(r){
+    const score=r.m.score;
+    const dp=r.demandPressure;
+    const m1=r.m1Rate;
+    if(score<50&&dp>0.9) return{label:'🔴 Acquire urgently',cls:'priority-acquire-urgent',tip:'Low retention score + high demand pressure. Fleet gap is financially critical.'};
+    if(score<60&&dp>0.75) return{label:'🟠 Acquire',cls:'priority-acquire',tip:'Below-average retention with meaningful demand pressure. Acquisition should be prioritized.'};
+    if(score>=70&&m1>0.65&&dp<0.7) return{label:'🟢 Retain focus',cls:'priority-retain',tip:'Strong retention and low demand pressure. Focus on keeping existing couriers active rather than growing headcount.'};
+    if(score>=60&&dp<0.8) return{label:'🔵 Balanced',cls:'priority-balanced',tip:'Healthy balance. Monitor for shifts. Light retention CRM recommended.'};
+    return{label:'🟡 Monitor',cls:'priority-monitor',tip:'Mixed signals. Watch M1 trend closely before committing to acquisition spend.'};
+  }
+
+  let tableRows='';
   rows.forEach(r=>{
-    const pct=Math.round((r.stock/maxStock)*100);
-    const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#3B82F6';
-    bars+='<div class="stock-row">'+
-      '<div class="stock-mkt"><span class="flag">'+r.m.flag+'</span>'+r.m.country+'</div>'+
-      '<div class="stock-bar-bg"><div class="stock-bar-fill" style="width:'+pct+'%;background:'+col+'">'+
-      (pct>20?r.stock.toLocaleString():'')+'</div></div>'+
-      '<div class="stock-val">'+(pct<=20?r.stock.toLocaleString():'')+'</div></div>';
+    const prio=getPriority(r);
+    const dpPct=Math.round(r.demandPressure*100);
+    const dpColor=r.demandPressure>1?'#DC2626':r.demandPressure>0.8?'#D97706':'#16A34A';
+    const govFmt=r.weeklyGovAtRisk>999?'€'+(r.weeklyGovAtRisk/1000).toFixed(0)+'k':'€'+r.weeklyGovAtRisk;
+    const statCol=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#3B82F6';
+    tableRows+='<tr>'+
+      '<td><div style="display:flex;align-items:center;gap:5px"><span class="flag">'+r.m.flag+'</span><span style="font-size:12px;font-weight:500">'+r.m.country+'</span></div></td>'+
+      '<td style="font-weight:700;color:'+statCol+'">'+r.stock.toLocaleString()+'</td>'+
+      '<td><div style="display:flex;align-items:center;gap:6px">'+
+        '<div style="flex:1;background:#F3F4F6;border-radius:4px;height:14px;overflow:hidden;min-width:60px">'+
+          '<div style="height:100%;background:'+dpColor+';width:'+Math.min(dpPct,100)+'%;border-radius:4px"></div>'+
+        '</div>'+
+        '<span style="font-size:11px;font-weight:700;color:'+dpColor+'">'+dpPct+'%</span>'+
+      '</div></td>'+
+      '<td style="font-size:12px;font-weight:700;color:#374151">'+govFmt+'</td>'+
+      '<td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#F3F4F6">'+prio.label+'</span></td>'+
+      '</tr>';
   });
 
   el.innerHTML='<div class="ret-section">'+
-    '<h3>Active Courier Stock from Recent Onboarding</h3>'+
-    '<p class="ret-note" style="margin-bottom:14px">Estimated active couriers contributed by the last 3 cohort months, calculated as cohort_size × M1 retention rate. Represents the onboarding pipeline\'s ongoing contribution to the active fleet.</p>'+
-    '<div style="display:flex;gap:12px;margin-bottom:20px">'+
-    '<div class="stock-total" style="flex:1"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">Total M1-retained couriers<br>(last 3 cohorts, network)</div></div></div>'+
-    '<div class="stock-total" style="flex:1;background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">Total M2-retained couriers<br>(long-term sticky fleet)</div></div></div></div>'+
-    '<div class="stock-bar-wrap">'+bars+'</div>'+
-    '<p class="ret-note" style="margin-top:10px">Formula: Σ (cohort_size × M1%) for the 3 most recent non-Feb cohorts with ≥20 new couriers. Blue = stable, Orange = watch, Red = critical markets.</p></div>';
+    '<h3>Courier Stock & Supply/Demand Balance</h3>'+
+    '<p class="ret-note" style="margin-bottom:14px">Active couriers contributed by the last 3 onboarding cohorts (cohort_size × M1 rate). Demand Pressure = weekly orders ÷ active fleet vs. 15-order benchmark. GOV at Risk = estimated 4-week revenue impact if 10% of onboarded couriers churn.</p>'+
+
+    // Summary KPI strip
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'+
+      '<div class="stock-total" style="flex:1"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">M1-retained couriers<br>(last 3 cohorts, network)</div></div></div>'+
+      '<div class="stock-total" style="flex:1;background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">M2-retained couriers<br>(long-term sticky fleet)</div></div></div>'+
+      '<div class="stock-total" style="flex:1;background:linear-gradient(135deg,#7C3AED,#A78BFA)"><div><div class="stock-num">€'+(totalGovRisk/1000).toFixed(0)+'k</div><div class="stock-sub">Total 4-week GOV at risk<br>if 10% churn continues</div></div></div>'+
+    '</div>'+
+
+    // Priority legend
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:11px">'+
+      '<span style="color:#6B7280;font-weight:600;align-self:center">Priority key:</span>'+
+      '<span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:5px;font-weight:600">🔴 Acquire urgently</span>'+
+      '<span style="background:#FFEDD5;color:#92400E;padding:2px 8px;border-radius:5px;font-weight:600">🟠 Acquire</span>'+
+      '<span style="background:#FEF9C3;color:#854D0E;padding:2px 8px;border-radius:5px;font-weight:600">🟡 Monitor</span>'+
+      '<span style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:5px;font-weight:600">🔵 Balanced</span>'+
+      '<span style="background:#F0FDF4;color:#166534;padding:2px 8px;border-radius:5px;font-weight:600">🟢 Retain focus</span>'+
+    '</div>'+
+
+    // Table
+    '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
+      '<th><div class="thwrap">Market <i class="tip tip-left" data-tip="The courier market, sorted by 4-week GOV at risk (highest first).">?</i></div></th>'+
+      '<th><div class="thwrap">Onboarded Stock <i class="tip tip-left" data-tip="Estimated active couriers from the last 3 cohort months (cohort_size × M1 retention). Colour: red = critical market, orange = watch, blue = stable.">?</i></div></th>'+
+      '<th style="min-width:150px"><div class="thwrap">Demand Pressure <i class="tip tip-left" data-tip="Weekly orders ÷ active fleet, benchmarked against a 15-order/courier/week target. >100% = undersupplied (demand exceeds capacity). Red = high tension, green = well-supplied.">?</i></div></th>'+
+      '<th><div class="thwrap">GOV at Risk (4w) <i class="tip tip-left" data-tip="Estimated 4-week Gross Order Value at risk if 10% of recently onboarded couriers churn. Calculated as: churned_couriers × weekly_orders_per_courier × avg_order_GOV × 4 weeks.">?</i></div></th>'+
+      '<th><div class="thwrap">Priority <i class="tip tip-left" data-tip="Action priority based on EWS score + demand pressure. Acquire urgently = low score + high demand. Retain focus = strong retention + low demand pressure.">?</i></div></th>'+
+    '</tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
+    '<p class="ret-note" style="margin-top:10px">Demand data: internal market estimates Q2 2026. GOV figures are directional — use alongside Finance for exact impact sizing.</p></div>';
 }
 
 // ── SIGNAL → OUTCOME CORRELATION ──
