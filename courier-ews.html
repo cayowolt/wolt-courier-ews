@@ -1360,8 +1360,8 @@ function renderRetStock(){
       const cx=px(r.demandPressure),cy=py(r.m.score);
       const radius=Math.max(9,Math.round((r.stock/maxStock)*22));
       const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#10B981';
-      svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+radius+'" fill="'+col+'" opacity="0.72" stroke="#fff" stroke-width="1.5"/>';
-      svg+='<text x="'+(cx+radius+3).toFixed(1)+'" y="'+(cy+4).toFixed(1)+'" font-size="13">'+r.m.flag+'</text>';
+      svg+='<g><title>'+r.m.country+'</title><circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+radius+'" fill="'+col+'" opacity="0.72" stroke="#fff" stroke-width="1.5"/></g>';
+      svg+='<text x="'+(cx+radius+3).toFixed(1)+'" y="'+(cy+4).toFixed(1)+'" font-size="13"><title>'+r.m.country+'</title>'+r.m.flag+'</text>';
     });
 
     // Axis labels
@@ -1388,7 +1388,7 @@ function renderRetStock(){
     ];
     gDefs.forEach(g=>{
       const mkts=groups[g.key];
-      const flags=mkts.map(r=>r.m.flag).join(' ');
+      const flags=mkts.map(r=>'<span title="'+r.m.country+'" style="cursor:default">'+r.m.flag+'</span>').join(' ');
       summary+='<div style="background:'+g.bg+';border:1px solid '+g.bc+';border-radius:8px;padding:10px">'+
         '<div style="font-weight:700;color:'+g.tc+';font-size:12px;margin-bottom:4px">'+g.title+'</div>'+
         '<div style="font-size:11px;color:'+g.tc+';opacity:0.8;margin-bottom:6px">'+g.desc+'</div>'+
