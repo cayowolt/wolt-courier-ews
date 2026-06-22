@@ -959,7 +959,7 @@ function switchRetView(name,el){
   if(pnl){
     pnl.classList.add('active');
     const fn={overview:renderRetOverview,heatmap:renderRetHeatmap,stock:renderRetStock,
-              correlation:renderRetCorrelation,benchmarks:renderRetBenchmarks,interventions:renderRetInterventions};
+              benchmarks:renderRetBenchmarks,interventions:renderRetInterventions};
     if(fn[name]&&!pnl.dataset.rendered) fn[name]();
   }
 }
@@ -975,14 +975,12 @@ function renderRetention(){
     '<button class="ret-snbtn active" onclick="switchRetView(\'overview\',this)">📋 Overview</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'heatmap\',this)">🔥 Cohort Heatmap</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'stock\',this)">📦 Courier Stock</button>'+
-    '<button class="ret-snbtn" onclick="switchRetView(\'correlation\',this)">📡 Signal → Outcome</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'benchmarks\',this)">⚖️ Regional Benchmarks</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'interventions\',this)">📝 Interventions</button>'+
     '</div>'+
     '<div id="ret-view-overview" class="ret-view active"></div>'+
     '<div id="ret-view-heatmap" class="ret-view"></div>'+
     '<div id="ret-view-stock" class="ret-view"></div>'+
-    '<div id="ret-view-correlation" class="ret-view"></div>'+
     '<div id="ret-view-benchmarks" class="ret-view"></div>'+
     '<div id="ret-view-interventions" class="ret-view"></div>';
   renderRetOverview();
@@ -1091,13 +1089,31 @@ function _buildOverviewTable(){
 }
 
 // ── HEATMAP ──
+let _hmMetric='m1';
+
 function renderRetHeatmap(){
   const el=document.getElementById('ret-view-heatmap');
-  if(!el||el.dataset.rendered) return;
+  if(!el) return;
   el.dataset.rendered='1';
+  _buildHeatmap();
+}
 
+function _switchHmMetric(metric){
+  _hmMetric=metric;
+  document.querySelectorAll('.hm-toggle-btn').forEach(b=>{
+    b.style.background=b.dataset.metric===metric?'#111':'#fff';
+    b.style.color=b.dataset.metric===metric?'#fff':'#374151';
+    b.style.borderColor=b.dataset.metric===metric?'#111':'#D1D5DB';
+  });
+  _buildHeatmap();
+}
+
+function _buildHeatmap(){
+  const el=document.getElementById('ret-view-heatmap');
+  if(!el) return;
+  const metric=_hmMetric;
   const months=ALL_MONTHS;
-  // Sort markets by region then M1 descending
+
   const sorted=[...MARKETS].sort((a,b)=>{
     const ra=REGION_MAP[a.id]||'ZZZ',rb=REGION_MAP[b.id]||'ZZZ';
     if(ra!==rb) return ra.localeCompare(rb);
@@ -1105,7 +1121,19 @@ function renderRetHeatmap(){
     return (getLatestM1(db)?.m1??0)-(getLatestM1(da)?.m1??0);
   });
 
-  const legend='<div class="hm-legend">Color scale (M1%):<span class="hm-swatch" style="background:#FEE2E2"></span>&lt;40'+
+  const metricLabel=metric==='m1'?'M1':'M2';
+  const toggle='<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">'+
+    '<span style="font-size:12px;color:#6B7280;font-weight:500">Metric:</span>'+
+    '<button class="hm-toggle-btn" data-metric="m1" onclick="_switchHmMetric(\'m1\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M1</button>'+
+    '<button class="hm-toggle-btn" data-metric="m2" onclick="_switchHmMetric(\'m2\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
+    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'M2 = % active in 3rd month after first delivery':'M1 = % active in 2nd month after first delivery')+'</span>'+
+  '</div>';
+
+  const legend='<div class="hm-legend">Color scale ('+metricLabel+'%):<span class="hm-swatch" style="background:#FEE2E2"></span>&lt;40'+
     '<span class="hm-swatch" style="background:#FECACA"></span>40–55'+
     '<span class="hm-swatch" style="background:#FEF9C3"></span>55–65'+
     '<span class="hm-swatch" style="background:#DCFCE7"></span>65–75'+
@@ -1115,7 +1143,7 @@ function renderRetHeatmap(){
   let head='<tr><th class="hm-mkt">Market</th>';
   months.forEach(m=>{
     const lbl=m.slice(2).replace('-','/');
-    head+='<th style="text-align:center'+(m===FEB_ANOMALY?' color:#9CA3AF':'')+'">'+(m===FEB_ANOMALY?'⚠️ ':'')+lbl+'</th>';
+    head+='<th style="text-align:center'+(m===FEB_ANOMALY?';color:#9CA3AF':'')+'">'+(m===FEB_ANOMALY?'⚠️ ':'')+lbl+'</th>';
   });
   head+='</tr>';
 
@@ -1133,22 +1161,33 @@ function renderRetHeatmap(){
     let row='<tr><td class="hm-cell-mkt"><span class="flag">'+m.flag+'</span> '+m.country+'</td>';
     months.forEach(mo=>{
       const d=byMonth[mo];
+      const val=d?d[metric]:null;
       if(!d||d.s<=20){
         row+='<td class="hm-cell hm-na">'+(d&&d.s>0?'<span style="font-size:9px">n='+d.s+'</span>':'—')+'</td>';
       } else if(mo===FEB_ANOMALY){
-        row+='<td class="hm-cell hm-feb">'+d.m1+'%</td>';
+        row+='<td class="hm-cell hm-feb">'+(val!==null&&val!==undefined?val+'%':'—')+'</td>';
+      } else if(val===null||val===undefined){
+        row+='<td class="hm-cell hm-na">—</td>';
       } else {
-        const bg=m1Bg(d.m1),fg=m1Fg(d.m1);
-        row+='<td class="hm-cell" style="background:'+bg+';color:'+fg+'">'+d.m1+'%</td>';
+        const bg=m1Bg(val),fg=m1Fg(val);
+        row+='<td class="hm-cell" style="background:'+bg+';color:'+fg+'">'+val+'%</td>';
       }
     });
     row+='</tr>';
     body+=row;
   });
 
-  el.innerHTML='<div class="ret-section"><h3>Cohort Retention Heatmap (M1 %)</h3>'+
-    '<p class="ret-note" style="margin-bottom:10px">Each cell = M1 retention for couriers who joined that month. Striped cells = Feb 2026 onboarding anomaly (treat as unreliable). Grey = cohort too small (&lt;20 couriers).</p>'+
-    legend+'<div class="hm-wrap"><table class="hm-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div></div>';
+  const wrap=el.querySelector('.hm-content-wrap');
+  const content='<div class="ret-section"><h3>Cohort Retention Heatmap ('+metricLabel+' %)</h3>'+
+    '<p class="ret-note" style="margin-bottom:10px">Each cell = '+metricLabel+' retention for couriers who joined that month. '+
+    (metric==='m2'?'M2 reveals markets where couriers activate (M1 ok) but don\'t stick long-term — compare with M1 to spot the drop-off.':'Striped cells = Feb 2026 onboarding anomaly (treat as unreliable). Grey = cohort too small (&lt;20 couriers).')+
+    '</p>'+legend+'<div class="hm-wrap"><table class="hm-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div></div>';
+
+  if(wrap){
+    wrap.innerHTML=content;
+  } else {
+    el.innerHTML=toggle+'<div class="hm-content-wrap">'+content+'</div>';
+  }
 }
 
 // ── COURIER STOCK ──
@@ -1180,204 +1219,237 @@ const MARKET_DEMAND = {
   GE:{fleet:1300,weeklyOrders:20000,govPerOrder:5.5}
 };
 
+let _stockView='overview';
+
 function renderRetStock(){
   const el=document.getElementById('ret-view-stock');
-  if(!el||el.dataset.rendered) return;
+  if(!el) return;
   el.dataset.rendered='1';
 
-  const rows=MARKETS.map(m=>{
+  // Pre-compute all rows once
+  const allRows=MARKETS.map(m=>{
     const stock=calcStock(m.id);
     const stockM2=calcStockM2(m.id);
     const dm=MARKET_DEMAND[m.id]||{fleet:1000,weeklyOrders:15000,govPerOrder:10};
-    // utilization = weekly orders / active fleet (orders per courier per week)
     const util=dm.weeklyOrders/dm.fleet;
-    // target utilization benchmark: 15 orders/courier/week
-    const targetUtil=15;
-    const demandPressure=util/targetUtil; // >1 = undersupplied, <1 = oversupplied
-    // stock gap = how much of the fleet comes from recent onboarding (last 3 cohorts)
-    const stockShare=dm.fleet>0?stock/dm.fleet:0;
-    // GOV at risk: if M1 drops 10pp, how much weekly GOV is lost?
+    const demandPressure=util/15;
     const latestData=RETENTION_DATA[m.id];
     const latest=latestData?getLatestM1(latestData):null;
     const m1Rate=latest?(latest.m1/100):0.65;
-    // couriers at risk = couriers who might churn if trend continues
-    const churnRisk=Math.round(stock*0.10); // 10% sensitivity
-    const weeklyGovAtRisk=Math.round(churnRisk*util*dm.govPerOrder*4); // 4-week impact
-    return {m,stock,stockM2,dm,util,demandPressure,stockShare,weeklyGovAtRisk,m1Rate};
-  }).filter(r=>r.stock>0).sort((a,b)=>b.weeklyGovAtRisk-a.weeklyGovAtRisk);
+    const churnRisk=Math.round(stock*0.10);
+    const weeklyGovAtRisk=Math.round(churnRisk*util*dm.govPerOrder*4);
+    return {m,stock,stockM2,dm,util,demandPressure,weeklyGovAtRisk,m1Rate,latestM1:latest?.m1??null};
+  }).filter(r=>r.stock>0);
 
-  const total=rows.reduce((s,r)=>s+r.stock,0);
-  const totalM2=rows.reduce((s,r)=>s+r.stockM2,0);
-  const totalGovRisk=rows.reduce((s,r)=>s+r.weeklyGovAtRisk,0);
+  const total=allRows.reduce((s,r)=>s+r.stock,0);
+  const totalM2=allRows.reduce((s,r)=>s+r.stockM2,0);
 
-  // Priority logic
   function getPriority(r){
-    const score=r.m.score;
-    const dp=r.demandPressure;
-    const m1=r.m1Rate;
-    if(score<50&&dp>0.9) return{label:'🔴 Acquire urgently',cls:'priority-acquire-urgent',tip:'Low retention score + high demand pressure. Fleet gap is financially critical.'};
-    if(score<60&&dp>0.75) return{label:'🟠 Acquire',cls:'priority-acquire',tip:'Below-average retention with meaningful demand pressure. Acquisition should be prioritized.'};
-    if(score>=70&&m1>0.65&&dp<0.7) return{label:'🟢 Retain focus',cls:'priority-retain',tip:'Strong retention and low demand pressure. Focus on keeping existing couriers active rather than growing headcount.'};
-    if(score>=60&&dp<0.8) return{label:'🔵 Balanced',cls:'priority-balanced',tip:'Healthy balance. Monitor for shifts. Light retention CRM recommended.'};
-    return{label:'🟡 Monitor',cls:'priority-monitor',tip:'Mixed signals. Watch M1 trend closely before committing to acquisition spend.'};
+    const score=r.m.score,dp=r.demandPressure;
+    if(score<50&&dp>0.9) return{label:'🔴 Acquire urgently',bg:'#FEE2E2',tc:'#991B1B'};
+    if(score<60&&dp>0.75) return{label:'🟠 Acquire',bg:'#FFEDD5',tc:'#92400E'};
+    if(score>=70&&r.m1Rate>0.65&&dp<0.7) return{label:'🟢 Retain focus',bg:'#F0FDF4',tc:'#166534'};
+    if(score>=60&&dp<0.8) return{label:'🔵 Balanced',bg:'#EFF6FF',tc:'#1D4ED8'};
+    return{label:'🟡 Monitor',bg:'#FEF9C3',tc:'#854D0E'};
   }
 
-  let tableRows='';
-  rows.forEach(r=>{
-    const prio=getPriority(r);
-    const dpPct=Math.round(r.demandPressure*100);
-    const dpColor=r.demandPressure>1?'#DC2626':r.demandPressure>0.8?'#D97706':'#16A34A';
-    const govFmt=r.weeklyGovAtRisk>999?'€'+(r.weeklyGovAtRisk/1000).toFixed(0)+'k':'€'+r.weeklyGovAtRisk;
-    const statCol=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#3B82F6';
-    tableRows+='<tr>'+
-      '<td><div style="display:flex;align-items:center;gap:5px"><span class="flag">'+r.m.flag+'</span><span style="font-size:12px;font-weight:500">'+r.m.country+'</span></div></td>'+
-      '<td style="font-weight:700;color:'+statCol+'">'+r.stock.toLocaleString()+'</td>'+
-      '<td><div style="display:flex;align-items:center;gap:6px">'+
-        '<div style="flex:1;background:#F3F4F6;border-radius:4px;height:14px;overflow:hidden;min-width:60px">'+
-          '<div style="height:100%;background:'+dpColor+';width:'+Math.min(dpPct,100)+'%;border-radius:4px"></div>'+
-        '</div>'+
-        '<span style="font-size:11px;font-weight:700;color:'+dpColor+'">'+dpPct+'%</span>'+
-      '</div></td>'+
-      '<td style="font-size:12px;font-weight:700;color:#374151">'+govFmt+'</td>'+
-      '<td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#F3F4F6">'+prio.label+'</span></td>'+
-      '</tr>';
-  });
-
-  el.innerHTML='<div class="ret-section">'+
-    '<h3>Courier Stock & Supply/Demand Balance</h3>'+
-    '<p class="ret-note" style="margin-bottom:14px">Active couriers contributed by the last 3 onboarding cohorts (cohort_size × M1 rate). Demand Pressure = weekly orders ÷ active fleet vs. 15-order benchmark. GOV at Risk = estimated 4-week revenue impact if 10% of onboarded couriers churn.</p>'+
-
-    // Summary KPI strip
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">'+
-      '<div class="stock-total" style="flex:1"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">M1-retained couriers<br>(last 3 cohorts, network)</div></div></div>'+
-      '<div class="stock-total" style="flex:1;background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">M2-retained couriers<br>(long-term sticky fleet)</div></div></div>'+
-      '<div class="stock-total" style="flex:1;background:linear-gradient(135deg,#7C3AED,#A78BFA)"><div><div class="stock-num">€'+(totalGovRisk/1000).toFixed(0)+'k</div><div class="stock-sub">Total 4-week GOV at risk<br>if 10% churn continues</div></div></div>'+
-    '</div>'+
-
-    // Priority legend
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:11px">'+
-      '<span style="color:#6B7280;font-weight:600;align-self:center">Priority key:</span>'+
-      '<span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:5px;font-weight:600">🔴 Acquire urgently</span>'+
-      '<span style="background:#FFEDD5;color:#92400E;padding:2px 8px;border-radius:5px;font-weight:600">🟠 Acquire</span>'+
-      '<span style="background:#FEF9C3;color:#854D0E;padding:2px 8px;border-radius:5px;font-weight:600">🟡 Monitor</span>'+
-      '<span style="background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:5px;font-weight:600">🔵 Balanced</span>'+
-      '<span style="background:#F0FDF4;color:#166534;padding:2px 8px;border-radius:5px;font-weight:600">🟢 Retain focus</span>'+
-    '</div>'+
-
-    // Table
-    '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
-      '<th><div class="thwrap">Market <i class="tip tip-left" data-tip="The courier market, sorted by 4-week GOV at risk (highest first).">?</i></div></th>'+
-      '<th><div class="thwrap">Onboarded Stock <i class="tip tip-left" data-tip="Estimated active couriers from the last 3 cohort months (cohort_size × M1 retention). Colour: red = critical market, orange = watch, blue = stable.">?</i></div></th>'+
-      '<th style="min-width:150px"><div class="thwrap">Demand Pressure <i class="tip tip-left" data-tip="Weekly orders ÷ active fleet, benchmarked against a 15-order/courier/week target. >100% = undersupplied (demand exceeds capacity). Red = high tension, green = well-supplied.">?</i></div></th>'+
-      '<th><div class="thwrap">GOV at Risk (4w) <i class="tip tip-left" data-tip="Estimated 4-week Gross Order Value at risk if 10% of recently onboarded couriers churn. Calculated as: churned_couriers × weekly_orders_per_courier × avg_order_GOV × 4 weeks.">?</i></div></th>'+
-      '<th><div class="thwrap">Priority <i class="tip tip-left" data-tip="Action priority based on EWS score + demand pressure. Acquire urgently = low score + high demand. Retain focus = strong retention + low demand pressure.">?</i></div></th>'+
-    '</tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
-    '<p class="ret-note" style="margin-top:10px">Demand data: internal market estimates Q2 2026. GOV figures are directional — use alongside Finance for exact impact sizing.</p></div>';
-}
-
-// ── SIGNAL → OUTCOME CORRELATION ──
-function renderRetCorrelation(){
-  const el=document.getElementById('ret-view-correlation');
-  if(!el||el.dataset.rendered) return;
-  el.dataset.rendered='1';
-
-  const pts=MARKETS.map(m=>{
-    const data=RETENTION_DATA[m.id];
-    if(!data) return null;
-    const latest=getLatestM1(data);
-    if(!latest) return null;
-    const od=m.signals.offerDecline;
-    if(!od||od.v===null) return null;
-    return {id:m.id,flag:m.flag,country:m.country,m1:latest.m1,delta:od.d,status:m.status,v:od.v};
-  }).filter(Boolean);
-
-  const W=520,H=290,ML=52,MR=20,MT=20,MB=42;
-  const pW=W-ML-MR,pH=H-MT-MB;
-  const xVals=pts.map(p=>p.delta),yVals=pts.map(p=>p.m1);
-  const xMin=Math.min(...xVals)-0.8,xMax=Math.max(...xVals)+0.8;
-  const yMin=Math.max(0,Math.min(...yVals)-8),yMax=Math.min(100,Math.max(...yVals)+8);
-  const medM1=median(yVals);
-
-  function px(v){return ML+(v-xMin)/(xMax-xMin)*pW;}
-  function py(v){return MT+(yMax-v)/(yMax-yMin)*pH;}
-
-  let svg='<svg class="scatter-svg" viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:540px">';
-
-  // Quad backgrounds
-  const zx=px(0),my=py(medM1);
-  svg+='<rect x="'+ML+'" y="'+MT+'" width="'+(zx-ML)+'" height="'+(my-MT)+'" fill="#F0FDF4" opacity="0.5"/>'; // top-left: healthy
-  svg+='<rect x="'+zx+'" y="'+my+'" width="'+(W-MR-zx)+'" height="'+(H-MB-my)+'" fill="#FEF2F2" opacity="0.5"/>'; // bottom-right: risk
-
-  // Grid
-  [0.25,0.5,0.75].forEach(f=>{
-    const gy=MT+f*pH;
-    svg+='<line x1="'+ML+'" y1="'+gy+'" x2="'+(W-MR)+'" y2="'+gy+'" stroke="#E5E7EB" stroke-width="1"/>';
-  });
-
-  // Reference lines
-  svg+='<line x1="'+zx+'" y1="'+MT+'" x2="'+zx+'" y2="'+(H-MB)+'" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4,3"/>';
-  svg+='<line x1="'+ML+'" y1="'+my+'" x2="'+(W-MR)+'" y2="'+my+'" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4,3"/>';
-  svg+='<text class="scatter-quad-label" x="'+(ML+4)+'" y="'+(MT+14)+'">Healthy</text>';
-  svg+='<text class="scatter-quad-label" x="'+(zx+4)+'" y="'+(H-MB-6)+'">At risk</text>';
-
-  // Axes
-  svg+='<line x1="'+ML+'" y1="'+MT+'" x2="'+ML+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
-  svg+='<line x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
-
-  // X ticks
-  for(let t=Math.ceil(xMin);t<=Math.floor(xMax);t++){
-    const tx=px(t);
-    svg+='<line x1="'+tx+'" y1="'+(H-MB)+'" x2="'+tx+'" y2="'+(H-MB+4)+'" stroke="#D1D5DB" stroke-width="1"/>';
-    svg+='<text x="'+tx+'" y="'+(H-MB+14)+'" text-anchor="middle" font-size="9" fill="#9CA3AF">'+(t>0?'+':'')+t+'</text>';
+  // ── View toggle buttons ──
+  function viewToggle(){
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'+
+      '<button class="stock-vbtn" data-v="overview" onclick="_switchStockView(\'overview\')" style="padding:5px 14px;border-radius:7px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+(_stockView==='overview'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">📋 Stock Overview</button>'+
+      '<button class="stock-vbtn" data-v="matrix" onclick="_switchStockView(\'matrix\')" style="padding:5px 14px;border-radius:7px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+(_stockView==='matrix'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">🎯 Priority Matrix</button>'+
+      '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(_stockView==='overview'?'Headcount from recent onboarding':'Acquire vs. Retain decision view')+'</span>'+
+    '</div>';
   }
-  // Y ticks
-  [30,40,50,60,70,80,90].forEach(v=>{
-    if(v>=yMin&&v<=yMax){
-      const ty=py(v);
-      svg+='<text x="'+(ML-4)+'" y="'+(ty+4)+'" text-anchor="end" font-size="9" fill="#9CA3AF">'+v+'%</text>';
-    }
-  });
 
-  // Points
-  pts.forEach(p=>{
-    const cx=px(p.delta).toFixed(1),cy=py(p.m1).toFixed(1);
-    const col=p.status==='critical'?'#EF4444':p.status==='watch'?'#F97316':'#10B981';
-    svg+='<circle cx="'+cx+'" cy="'+cy+'" r="7" fill="'+col+'" opacity="0.75" stroke="#fff" stroke-width="1.5"/>';
-    svg+='<text x="'+(parseFloat(cx)+9)+'" y="'+(parseFloat(cy)+4)+'" font-size="11">'+p.flag+'</text>';
-  });
+  // ── KPI strip (shared) ──
+  const kpis='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px">'+
+    '<div class="stock-total"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">M1-retained couriers<br>from last 3 cohorts</div></div></div>'+
+    '<div class="stock-total" style="background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">M2-retained couriers<br>long-term sticky fleet</div></div></div>'+
+  '</div>';
 
-  // Axis labels
-  svg+='<text x="'+(ML+pW/2)+'" y="'+(H-2)+'" text-anchor="middle" font-size="10" fill="#6B7280">Offer Decline vs 8-wk Baseline (pp)</text>';
-  svg+='<text x="14" y="'+(MT+pH/2)+'" text-anchor="middle" font-size="10" fill="#6B7280" transform="rotate(-90,14,'+(MT+pH/2)+')">Latest M1 Retention (%)</text>';
-  svg+='</svg>';
+  // ── OVERVIEW VIEW ──
+  function buildOverview(){
+    const sorted=[...allRows].sort((a,b)=>b.stock-a.stock);
+    const maxStock=sorted[0]?.stock||1;
+    let trows='';
+    sorted.forEach(r=>{
+      const pct=Math.round((r.stock/maxStock)*85);
+      const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#3B82F6';
+      const m2txt=r.stockM2>0?r.stockM2.toLocaleString():'—';
+      const m1txt=r.latestM1!==null?r.latestM1+'%':'—';
+      const m1col=r.latestM1!==null?m1Fg(r.latestM1):'#9CA3AF';
+      trows+='<tr>'+
+        '<td><div style="display:flex;align-items:center;gap:5px"><span class="flag">'+r.m.flag+'</span><span style="font-size:12px;font-weight:500">'+r.m.country+'</span></div></td>'+
+        '<td>'+
+          '<div style="display:flex;align-items:center;gap:7px">'+
+            '<div style="flex:1;background:#F3F4F6;border-radius:4px;height:18px;overflow:hidden;min-width:80px">'+
+              '<div style="height:100%;background:'+col+';width:'+pct+'%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:700;color:#fff">'+
+                (pct>20?r.stock.toLocaleString():'')+
+              '</div>'+
+            '</div>'+
+            '<span style="font-size:12px;font-weight:700;color:#374151;min-width:30px">'+
+              (pct<=20?r.stock.toLocaleString():'')+'</span>'+
+          '</div>'+
+        '</td>'+
+        '<td style="font-weight:700;color:'+m1col+'">'+m1txt+'</td>'+
+        '<td style="color:#374151;font-size:12px">'+m2txt+'</td>'+
+        '</tr>';
+    });
+    return '<p class="ret-note" style="margin-bottom:12px">Estimated active couriers contributed by the last 3 cohort months (cohort_size × M1 retention rate). Bars sized by market. Blue = stable, orange = watch, red = critical.</p>'+
+      '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
+        '<th>Market</th>'+
+        '<th style="min-width:200px"><div class="thwrap">Onboarded Stock (M1) <i class="tip tip-left" data-tip="Couriers from last 3 cohorts still active at M1.">?</i></div></th>'+
+        '<th><div class="thwrap">M1 Rate <i class="tip tip-left" data-tip="Latest cohort M1 retention %. Shows the quality of recent onboarding.">?</i></div></th>'+
+        '<th><div class="thwrap">M2 Stock <i class="tip tip-left" data-tip="Couriers still active at M2. The long-term sticky portion of the onboarded fleet.">?</i></div></th>'+
+      '</tr></thead><tbody>'+trows+'</tbody></table></div>';
+  }
 
-  // Top 5 at-risk table
-  const atRisk=[...pts].filter(p=>p.delta>0).sort((a,b)=>(b.delta-b.m1/20)-(a.delta-a.m1/20)).slice(0,6);
-  let tbl='<table class="ret-table" style="margin-top:14px;font-size:12px"><thead><tr>'+
-    '<th>Market</th><th>Offer Decline Δ</th><th>Current Decline Rate</th><th>Latest M1</th><th>Status</th></tr></thead><tbody>';
-  atRisk.forEach(p=>{
-    tbl+='<tr><td><span class="flag">'+p.flag+'</span> '+p.country+'</td>'+
-      '<td><span style="color:#DC2626;font-weight:700">+'+p.delta+'pp</span></td>'+
-      '<td>'+p.v+'%</td>'+
-      '<td><span style="color:'+m1Fg(p.m1)+';font-weight:700">'+p.m1+'%</span></td>'+
-      '<td><span class="badge '+p.status+'"><span class="bdot '+p.status+'"></span>'+p.status+'</span></td></tr>';
-  });
-  tbl+='</tbody></table>';
+  // ── PRIORITY MATRIX VIEW ──
+  function buildMatrix(){
+    const W=560,H=360,ML=60,MR=30,MT=30,MB=55;
+    const pW=W-ML-MR,pH=H-MT-MB;
 
-  el.innerHTML='<div class="ret-section"><h3>Offer Decline Elevation vs. M1 Retention</h3>'+
-    '<p class="ret-note" style="margin-bottom:12px">Each bubble = one market. X axis = how much this week\'s offer decline deviates from its 8-week baseline. Y axis = latest cohort M1 retention. Green shading = healthy quadrant (low elevation, high retention). Red shading = at-risk quadrant.</p>'+
-    '<div class="scatter-wrap">'+svg+'</div>'+
-    '<div class="ret-note" style="margin-bottom:14px">● Green = Stable &nbsp;·&nbsp; ● Orange = Watch &nbsp;·&nbsp; ● Red = Critical &nbsp;·&nbsp; Dashed lines = zero deviation (vertical) and median M1 (horizontal)</div>'+
-    '<h3>Markets with Highest Combined Risk</h3>'+tbl+
-    '<p class="ret-note" style="margin-top:8px">Ranked by offer decline elevation. These markets are showing early disengagement signals that historically precede M1 drops in 4–6 weeks.</p></div>';
+    // X = demand pressure (0 to ~1.5), Y = EWS health score (0–100)
+    const xVals=allRows.map(r=>r.demandPressure);
+    const xMin=0,xMax=Math.max(1.4,...xVals)+0.1;
+    const yMin=20,yMax=105;
+
+    function px(v){return ML+(v-xMin)/(xMax-xMin)*pW;}
+    function py(v){return MT+(yMax-v)/(yMax-yMin)*pH;}
+
+    const xMid=px(0.8),yMid=py(60);
+    const maxStock=Math.max(...allRows.map(r=>r.stock));
+
+    let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:580px;display:block">';
+
+    // Quadrant backgrounds
+    svg+='<rect x="'+ML+'" y="'+MT+'" width="'+(xMid-ML)+'" height="'+(yMid-MT)+'" fill="#F0FDF4" opacity="0.7"/>'; // top-left: retain focus
+    svg+='<rect x="'+xMid+'" y="'+MT+'" width="'+(W-MR-xMid)+'" height="'+(yMid-MT)+'" fill="#FEF9C3" opacity="0.7"/>'; // top-right: monitor/balance
+    svg+='<rect x="'+ML+'" y="'+yMid+'" width="'+(xMid-ML)+'" height="'+(H-MB-yMid)+'" fill="#FEF9C3" opacity="0.4"/>'; // bottom-left: monitor
+    svg+='<rect x="'+xMid+'" y="'+yMid+'" width="'+(W-MR-xMid)+'" height="'+(H-MB-yMid)+'" fill="#FEE2E2" opacity="0.7"/>'; // bottom-right: acquire
+
+    // Quadrant labels
+    svg+='<text x="'+(ML+8)+'" y="'+(MT+16)+'" font-size="10" fill="#16A34A" font-weight="600">🟢 Retain focus</text>';
+    svg+='<text x="'+(xMid+8)+'" y="'+(MT+16)+'" font-size="10" fill="#92400E" font-weight="600">🟡 Monitor</text>';
+    svg+='<text x="'+(ML+8)+'" y="'+(H-MB-8)+'" font-size="10" fill="#6B7280" font-weight="600">🟡 Monitor</text>';
+    svg+='<text x="'+(xMid+8)+'" y="'+(H-MB-8)+'" font-size="10" fill="#DC2626" font-weight="600">🔴 Acquire</text>';
+
+    // Grid lines
+    [40,60,80].forEach(v=>{
+      const gy=py(v);
+      svg+='<line x1="'+ML+'" y1="'+gy+'" x2="'+(W-MR)+'" y2="'+gy+'" stroke="#E5E7EB" stroke-width="1"/>';
+      svg+='<text x="'+(ML-4)+'" y="'+(gy+4)+'" text-anchor="end" font-size="9" fill="#9CA3AF">'+v+'</text>';
+    });
+    [0.4,0.8,1.2].forEach(v=>{
+      const gx=px(v);
+      svg+='<line x1="'+gx+'" y1="'+MT+'" x2="'+gx+'" y2="'+(H-MB)+'" stroke="#E5E7EB" stroke-width="1"/>';
+      svg+='<text x="'+gx+'" y="'+(H-MB+14)+'" text-anchor="middle" font-size="9" fill="#9CA3AF">'+(Math.round(v*100))+'%</text>';
+    });
+
+    // Reference lines (division between quadrants)
+    svg+='<line x1="'+xMid+'" y1="'+MT+'" x2="'+xMid+'" y2="'+(H-MB)+'" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5,3"/>';
+    svg+='<line x1="'+ML+'" y1="'+yMid+'" x2="'+(W-MR)+'" y2="'+yMid+'" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5,3"/>';
+
+    // Axes
+    svg+='<line x1="'+ML+'" y1="'+MT+'" x2="'+ML+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
+    svg+='<line x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
+
+    // Bubbles (sized by stock)
+    allRows.forEach(r=>{
+      const cx=px(r.demandPressure),cy=py(r.m.score);
+      const radius=Math.max(9,Math.round((r.stock/maxStock)*22));
+      const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#10B981';
+      svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+radius+'" fill="'+col+'" opacity="0.72" stroke="#fff" stroke-width="1.5"/>';
+      svg+='<text x="'+(cx+radius+3).toFixed(1)+'" y="'+(cy+4).toFixed(1)+'" font-size="13">'+r.m.flag+'</text>';
+    });
+
+    // Axis labels
+    svg+='<text x="'+(ML+pW/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="11" fill="#6B7280">Demand Pressure (orders/courier vs. benchmark) →</text>';
+    svg+='<text x="12" y="'+(MT+pH/2)+'" text-anchor="middle" font-size="11" fill="#6B7280" transform="rotate(-90,12,'+(MT+pH/2)+')">← EWS Health Score (higher = healthier)</text>';
+    svg+='</svg>';
+
+    // Priority summary cards
+    const groups={acquire:[],monitor:[],balanced:[],retain:[]};
+    allRows.forEach(r=>{
+      const p=getPriority(r);
+      if(p.label.includes('Acquire')) groups.acquire.push(r);
+      else if(p.label.includes('Monitor')) groups.monitor.push(r);
+      else if(p.label.includes('Balanced')) groups.balanced.push(r);
+      else groups.retain.push(r);
+    });
+
+    let summary='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px">';
+    const gDefs=[
+      {key:'acquire',title:'🔴 Acquire',desc:'Low score or high demand pressure',bg:'#FEF2F2',tc:'#991B1B',bc:'#FECACA'},
+      {key:'monitor',title:'🟡 Monitor',desc:'Mixed signals, watch closely',bg:'#FEFCE8',tc:'#854D0E',bc:'#FDE68A'},
+      {key:'balanced',title:'🔵 Balanced',desc:'Healthy, light CRM',bg:'#EFF6FF',tc:'#1D4ED8',bc:'#BFDBFE'},
+      {key:'retain',title:'🟢 Retain focus',desc:'Strong retention, low pressure',bg:'#F0FDF4',tc:'#166534',bc:'#BBF7D0'}
+    ];
+    gDefs.forEach(g=>{
+      const mkts=groups[g.key];
+      const flags=mkts.map(r=>r.m.flag).join(' ');
+      summary+='<div style="background:'+g.bg+';border:1px solid '+g.bc+';border-radius:8px;padding:10px">'+
+        '<div style="font-weight:700;color:'+g.tc+';font-size:12px;margin-bottom:4px">'+g.title+'</div>'+
+        '<div style="font-size:11px;color:'+g.tc+';opacity:0.8;margin-bottom:6px">'+g.desc+'</div>'+
+        '<div style="font-size:16px;line-height:1.6">'+(flags||'<span style="font-size:11px;color:#9CA3AF">None</span>')+'</div>'+
+        '<div style="font-size:11px;color:'+g.tc+';margin-top:4px;font-weight:600">'+mkts.length+' market'+(mkts.length!==1?'s':'')+'</div>'+
+      '</div>';
+    });
+    summary+='</div>';
+
+    return '<p class="ret-note" style="margin-bottom:14px">Each bubble = one market. X axis = demand pressure (how hard the fleet is working vs. benchmark). Y axis = EWS health score. Bubble size = courier stock volume. Bottom-right = most urgent for acquisition.</p>'+
+      '<div style="overflow-x:auto">'+svg+'</div>'+summary+
+      '<p class="ret-note" style="margin-top:10px">Demand data: internal Q2 2026 estimates. Use alongside Finance for exact GOV sizing.</p>';
+  }
+
+  function renderStockContent(){
+    const inner=_stockView==='overview'?buildOverview():buildMatrix();
+    const wrap=el.querySelector('.stock-content-wrap');
+    if(wrap){wrap.innerHTML=inner;}
+    else{el.innerHTML='<div class="ret-section"><h3>Courier Stock</h3>'+kpis+viewToggle()+'<div class="stock-content-wrap">'+inner+'</div></div>';}
+    // Re-render toggle buttons to reflect current state
+    el.querySelectorAll('.stock-vbtn').forEach(b=>{
+      const active=b.dataset.v===_stockView;
+      b.style.background=active?'#111':'#fff';
+      b.style.color=active?'#fff':'#374151';
+      b.style.borderColor=active?'#111':'#D1D5DB';
+    });
+  }
+
+  window._switchStockView=function(v){
+    _stockView=v;
+    renderStockContent();
+  };
+
+  renderStockContent();
 }
 
 // ── REGIONAL BENCHMARKS ──
+let _benchMetric='m1';
+
 function renderRetBenchmarks(){
   const el=document.getElementById('ret-view-benchmarks');
-  if(!el||el.dataset.rendered) return;
+  if(!el) return;
   el.dataset.rendered='1';
+  _buildBenchmarks();
+}
 
+function _switchBenchMetric(metric){
+  _benchMetric=metric;
+  document.querySelectorAll('.bench-toggle-btn').forEach(b=>{
+    b.style.background=b.dataset.metric===metric?'#111':'#fff';
+    b.style.color=b.dataset.metric===metric?'#fff':'#374151';
+    b.style.borderColor=b.dataset.metric===metric?'#111':'#D1D5DB';
+  });
+  _buildBenchmarks();
+}
+
+function _buildBenchmarks(){
+  const el=document.getElementById('ret-view-benchmarks');
+  if(!el) return;
+  const metric=_benchMetric;
+  const metricLabel=metric==='m1'?'M1':'M2';
   const ORDER=['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH','OTHER'];
   let cards='';
 
@@ -1389,38 +1461,60 @@ function renderRetBenchmarks(){
       const data=RETENTION_DATA[m.id];
       if(!data) return null;
       const latest=getLatestM1(data);
-      return latest?{m,m1:latest.m1,m2:latest.m2,cohort:latest.m}:null;
+      if(!latest) return null;
+      const val=latest[metric];
+      return (val!==null&&val!==undefined)?{m,val,m1:latest.m1,m2:latest.m2,cohort:latest.m}:null;
     }).filter(Boolean);
     if(!mktData.length) return;
 
-    const med=median(mktData.map(d=>d.m1));
-    const maxDev=Math.max(...mktData.map(d=>Math.abs(d.m1-med)),1);
+    const med=median(mktData.map(d=>d.val));
+    const maxDev=Math.max(...mktData.map(d=>Math.abs(d.val-med)),1);
 
     let rows='';
-    [...mktData].sort((a,b)=>b.m1-a.m1).forEach(d=>{
-      const dev=(d.m1-med).toFixed(1);
+    [...mktData].sort((a,b)=>b.val-a.val).forEach(d=>{
+      const dev=(d.val-med).toFixed(1);
       const barPct=Math.round((Math.abs(parseFloat(dev))/maxDev)*45);
       const isPos=parseFloat(dev)>=0;
       const devcls=Math.abs(parseFloat(dev))<2?'neu':isPos?'pos':'neg';
+      // Show both M1 and M2 side by side for context
+      const m2badge=metric==='m1'&&d.m2!=null?
+        '<span style="font-size:10px;color:#9CA3AF;margin-left:4px">M2: '+d.m2+'%</span>':'';
       rows+='<div class="bench-row">'+
-        '<div class="bench-mkt"><span class="flag">'+d.m.flag+'</span>'+d.m.country+'</div>'+
+        '<div class="bench-mkt"><span class="flag">'+d.m.flag+'</span>'+d.m.country+m2badge+'</div>'+
         '<div style="position:relative;height:20px;background:#F3F4F6;border-radius:4px;overflow:hidden">'+
         '<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#D1D5DB"></div>'+
         (isPos?
           '<div style="position:absolute;top:2px;bottom:2px;left:50%;width:'+barPct+'%;background:#86EFAC;border-radius:0 3px 3px 0"></div>':
           '<div style="position:absolute;top:2px;bottom:2px;right:50%;width:'+barPct+'%;background:#FECACA;border-radius:3px 0 0 3px"></div>')+
+        '<span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#374151">'+d.val+'%</span>'+
         '</div>'+
         '<div class="bench-delta '+devcls+'">'+(parseFloat(dev)>0?'+':'')+dev+'pp</div></div>';
     });
 
     cards+='<div class="bench-card"><h4>'+rMeta.label+
-      '<span style="margin-left:auto;font-size:11px;font-weight:400;color:#9CA3AF">Median M1: <strong style="color:#374151">'+med.toFixed(1)+'%</strong></span></h4>'+
-      '<div class="bench-med-label">Bar shows deviation from regional median. Green = above, Red = below.</div>'+rows+'</div>';
+      '<span style="margin-left:auto;font-size:11px;font-weight:400;color:#9CA3AF">Median '+metricLabel+': <strong style="color:#374151">'+med.toFixed(1)+'%</strong></span></h4>'+
+      '<div class="bench-med-label">Bar shows deviation from regional '+metricLabel+' median. Green = above, Red = below.</div>'+rows+'</div>';
   });
 
-  el.innerHTML='<div class="ret-section"><h3>M1 Retention vs. Regional Median</h3>'+
-    '<p class="ret-note" style="margin-bottom:14px">Each bar shows how far a market\'s latest M1 sits above or below its region\'s median. Helps identify outliers within a region — a market 10pp below peers is a stronger signal than the same absolute number in isolation.</p>'+
-    '<div class="bench-grid">'+cards+'</div></div>';
+  const toggle='<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">'+
+    '<span style="font-size:12px;color:#6B7280;font-weight:500">Metric:</span>'+
+    '<button class="bench-toggle-btn" data-metric="m1" onclick="_switchBenchMetric(\'m1\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M1</button>'+
+    '<button class="bench-toggle-btn" data-metric="m2" onclick="_switchBenchMetric(\'m2\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
+    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'Showing % active in 3rd month — compare with M1 to spot the activation→stickiness drop-off':'Showing % active in 2nd month. Switch to M2 to see long-term stickiness.')+'</span>'+
+  '</div>';
+
+  const content='<div class="ret-section"><h3>'+metricLabel+' Retention vs. Regional Median</h3>'+
+    '<p class="ret-note" style="margin-bottom:12px">Each bar shows how far a market\'s latest '+metricLabel+' sits above or below its regional median. A market 10pp below peers is a stronger signal than the same absolute number in isolation.'+
+    (metric==='m1'?' Switch to M2 to check whether markets that look fine in M1 are actually losing couriers a month later.':' Markets where M1 looks fine but M2 is red have an activation-but-not-sticking problem.')+'</p>'+
+    toggle+'<div class="bench-grid">'+cards+'</div></div>';
+
+  const wrap=el.querySelector('.bench-content-wrap');
+  if(wrap) wrap.innerHTML=content;
+  else el.innerHTML='<div class="bench-content-wrap">'+content+'</div>';
 }
 
 // ── INTERVENTIONS ──
