@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Courier Retention EWS — Wolt</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F3F4F6;color:#111827;font-size:14px;min-height:100vh}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #E5E7EB;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.hl{display:flex;align-items:center;gap:11px}
+.wdot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,#009DE0,#0077B6)}
+.header h1{font-size:15px;font-weight:700;color:#111827}
+.header-sub{font-size:11px;color:#9CA3AF;margin-top:1px}
+.wpill{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+.hr-right{font-size:11px;color:#9CA3AF}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:1px solid #E5E7EB;padding:0 22px;display:flex;gap:0;position:sticky;top:47px;z-index:19}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:#6B7280;border-bottom:2px solid transparent;cursor:pointer;user-select:none;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab:hover{color:#374151}
+.tab.active{color:#2563EB;border-bottom-color:#2563EB;font-weight:600}
+
+/* SUMMARY STRIP */
+.strip{background:#fff;border-bottom:1px solid #E5E7EB;padding:10px 22px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.spill{display:flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;border:1px solid;cursor:pointer;transition:all .15s;user-select:none;font-size:12px;font-weight:600}
+.spill:hover{opacity:.8;transform:translateY(-1px)}
+.spill.active{box-shadow:0 0 0 2px currentColor}
+.spill.all{background:#F9FAFB;border-color:#D1D5DB;color:#374151}
+.spill.crit{background:#FEF2F2;border-color:#FECACA;color:#B91C1C}
+.spill.watch{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+.spill.stable{background:#F0FDF4;border-color:#BBF7D0;color:#166534}
+.pill-count{font-size:15px;line-height:1}
+.sled{width:7px;height:7px;border-radius:50%}
+.sled.crit{background:#EF4444;animation:pulse 2s infinite}
+.sled.watch{background:#F59E0B}
+.sled.stable{background:#22C55E}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sdiv{width:1px;height:22px;background:#E5E7EB;margin:0 3px}
+
+/* CONTENT */
+.panel{display:none;padding:18px 22px}
+.panel.active{display:block}
+
+/* TABLE CARD */
+.tcard{background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+thead tr{background:#F9FAFB;border-bottom:1px solid #E5E7EB}
+th{padding:9px 13px;text-align:left;font-size:10.5px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:#374151}
+.si{opacity:.4;margin-left:3px}
+th.sorted .si{opacity:1}
+tbody tr.mrow{border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .1s}
+tbody tr.mrow:last-child{border-bottom:none}
+tbody tr.mrow:hover{background:#FAFAFA}
+tbody tr.mrow.active{background:#EFF6FF}
+tbody tr.drow td{padding:0}
+td{padding:10px 13px;vertical-align:middle}
+
+/* MARKET CELL */
+.mcell{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.flag{font-size:19px;line-height:1}
+.cname{font-weight:600;font-size:13px}
+.rtag{font-size:10px;color:#9CA3AF;background:#F3F4F6;border-radius:4px;padding:1px 5px;font-weight:500}
+
+/* STATUS BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.critical{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+.badge.watch{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.badge.stable{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0}
+.bdot{width:5px;height:5px;border-radius:50%}
+.bdot.critical{background:#EF4444}
+.bdot.watch{background:#F59E0B}
+.bdot.stable{background:#22C55E}
+
+/* SCORE */
+.scwrap{display:flex;align-items:center;gap:5px}
+.scnum{font-size:14px;font-weight:700;width:26px}
+.scnum.critical{color:#EF4444}
+.scnum.watch{color:#F59E0B}
+.scnum.stable{color:#22C55E}
+.scbar{width:34px;height:4px;background:#E5E7EB;border-radius:2px;overflow:hidden}
+.scfill{height:100%;border-radius:2px}
+.scfill.critical{background:#EF4444}
+.scfill.watch{background:#F59E0B}
+.scfill.stable{background:#22C55E}
+.scd{font-size:11px;font-weight:500}
+.scd.up{color:#16A34A}
+.scd.down{color:#DC2626}
+.scd.flat{color:#9CA3AF}
+
+/* METRIC */
+.mwrap{white-space:nowrap}
+.mval{font-size:13px;font-weight:600}
+.md{font-size:11px;font-weight:500}
+.md.good{color:#16A34A}
+.md.bad{color:#DC2626}
+.md.warn{color:#D97706}
+.md.flat{color:#9CA3AF}
+
+.drtxt{font-size:12px;color:#374151;max-width:170px}
+.drnone{color:#D1D5DB}
+.impill{display:inline-block;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
+.imp1{background:#FEE2E2;color:#991B1B}
+.imp2{background:#FEF3C7;color:#92400E}
+.imp3{background:#FEF9C3;color:#854D0E}
+.impna{color:#D1D5DB;font-size:12px}
+.chv{font-size:11px;color:#9CA3AF;transition:transform .2s;display:inline-block}
+.chv.open{transform:rotate(90deg)}
+
+/* DETAIL PANEL */
+.dinn{padding:18px 22px;background:#F9FAFB;border-top:1px solid #E5E7EB}
+.dgrid{display:grid;grid-template-columns:1fr 1fr 270px;gap:18px}
+@media(max-width:860px){.dgrid{grid-template-columns:1fr}}
+.dsec h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9CA3AF;margin-bottom:11px}
+
+/* SIGNAL BARS */
+.sigi{margin-bottom:11px}
+.sigh{display:flex;justify-content:space-between;margin-bottom:3px}
+.sigl{font-size:11.5px;color:#374151}
+.sigv{font-size:11.5px;font-weight:600}
+.sigt{position:relative;height:6px;background:#E5E7EB;border-radius:3px;overflow:visible}
+.sigf{height:100%;border-radius:3px;max-width:100%}
+.sigf.good{background:#22C55E}
+.sigf.warn{background:#F59E0B}
+.sigf.bad{background:#EF4444}
+.sigtick{position:absolute;top:-3px;width:2px;height:12px;background:#374151;border-radius:1px}
+.sigb{display:flex;justify-content:space-between;margin-top:2px}
+.sigb span{font-size:10px;color:#9CA3AF}
+
+/* TREND CANVAS */
+.trendwrap{height:125px}
+
+/* ACTION BOXES */
+.hbox{background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:11px;margin-bottom:9px}
+.blbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9CA3AF;margin-bottom:4px}
+.btxt{font-size:12.5px;color:#374151;line-height:1.55}
+.lbox{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:11px}
+.lbox .blbl{color:#3B82F6}
+.lbox .btxt{color:#1E40AF;font-weight:500}
+.urgrow{display:flex;align-items:center;gap:8px;margin-top:9px}
+.urglbl{font-size:11px;color:#6B7280}
+.urgb{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.urg1{background:#FEE2E2;color:#991B1B}
+.urg2{background:#FEF3C7;color:#92400E}
+.urg3{background:#FEF9C3;color:#854D0E}
+
+.tfoot{font-size:11px;color:#9CA3AF;text-align:center;padding:12px;border-top:1px solid #F3F4F6}
+
+/* ═══════════ REGIONS PANEL ═══════════ */
+.rpage{display:flex;flex-direction:column;gap:14px}
+.rsummary{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:4px}
+.rsumcard{background:#fff;border-radius:8px;border:1px solid #E5E7EB;padding:14px 16px;cursor:pointer;transition:all .15s}
+.rsumcard:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);transform:translateY(-1px)}
+.rsumcard.active{border-color:#93C5FD;box-shadow:0 0 0 2px #BFDBFE}
+.rsumcard.standalone{border-left:3px solid}
+.rsumcard.standalone.critical{border-left-color:#EF4444}
+.rsumcard.standalone.watch{border-left-color:#F59E0B}
+.rsumcard.standalone.stable{border-left-color:#22C55E}
+.rsc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.rsc-name{font-size:14px;font-weight:700;color:#111827}
+.rsc-tag{font-size:10px;color:#9CA3AF;background:#F3F4F6;border-radius:4px;padding:2px 6px;font-weight:500;margin-top:2px}
+.rsc-score{font-size:22px;font-weight:800;line-height:1}
+.rsc-score.critical{color:#EF4444}
+.rsc-score.watch{color:#F59E0B}
+.rsc-score.stable{color:#22C55E}
+.rsc-dist{display:flex;gap:6px;margin-bottom:8px}
+.rsc-distpill{font-size:11px;font-weight:600;padding:2px 7px;border-radius:8px}
+.rsc-bar{height:5px;background:#E5E7EB;border-radius:3px;overflow:hidden}
+.rsc-barfill{height:100%;border-radius:3px}
+
+.rdiv{width:1px;background:#E5E7EB;align-self:stretch;margin:0 2px}
+
+/* Region detail section */
+.rdetail{background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden}
+.rdetail-header{padding:14px 18px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between}
+.rdetail-title{font-size:15px;font-weight:700;color:#111827;display:flex;align-items:center;gap:8px}
+.rdetail-meta{display:flex;align-items:center;gap:12px}
+
+.rcountry-row{display:grid;grid-template-columns:180px 100px 90px 110px 90px 1fr 80px;align-items:center;padding:9px 18px;border-bottom:1px solid #F3F4F6;cursor:pointer;transition:background .1s}
+.rcountry-row:last-child{border-bottom:none}
+.rcountry-row:hover{background:#FAFAFA}
+.rcountry-row.active{background:#EFF6FF}
+.rth{display:grid;grid-template-columns:180px 100px 90px 110px 90px 1fr 80px;align-items:center;padding:8px 18px;background:#F9FAFB;border-bottom:1px solid #E5E7EB}
+.rthcell{font-size:10px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em}
+
+/* ═══════════ FAQ PANEL ═══════════ */
+.faqwrap{max-width:820px}
+.faq-section{background:#fff;border-radius:10px;border:1px solid #E5E7EB;margin-bottom:14px;overflow:hidden}
+.faq-section-header{padding:16px 20px;font-size:14px;font-weight:700;color:#111827;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;transition:background .1s}
+.faq-section-header:hover{background:#F9FAFB}
+.faq-section-body{padding:0 20px 18px;display:none}
+.faq-section-body.open{display:block}
+.faq-q{font-size:13px;font-weight:600;color:#1E40AF;margin-top:14px;margin-bottom:4px}
+.faq-a{font-size:13px;color:#374151;line-height:1.65}
+.faq-a p{margin-bottom:8px}
+.faq-a p:last-child{margin-bottom:0}
+.weight-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.weight-table th{text-align:left;padding:6px 10px;background:#F9FAFB;border:1px solid #E5E7EB;color:#374151;font-weight:600}
+.weight-table td{padding:6px 10px;border:1px solid #E5E7EB;color:#374151}
+.weight-table tr:nth-child(even) td{background:#FAFAFA}
+.formula-box{background:#F0F4FF;border:1px solid #C7D7FC;border-radius:8px;padding:12px 16px;margin-top:8px;font-family:monospace;font-size:12px;color:#1E3A8A;line-height:1.8}
+.threshold-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.threshold-table th{padding:6px 10px;background:#F9FAFB;border:1px solid #E5E7EB;color:#374151;font-weight:600;text-align:left}
+.threshold-table td{padding:6px 10px;border:1px solid #E5E7EB}
+.faq-intro{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#1E40AF;line-height:1.6}
+.fchv{font-size:14px;color:#9CA3AF;transition:transform .2s;display:inline-block}
+.fchv.open{transform:rotate(180deg)}
+
+.ret-section{margin-bottom:28px}
+.ret-section h3{font-size:14px;font-weight:700;color:#111;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid #E5E7EB}
+.ret-table{width:100%;border-collapse:collapse;font-size:13px}
+.ret-table th{background:#F9FAFB;padding:8px 10px;text-align:left;font-weight:600;color:#374151;border-bottom:2px solid #E5E7EB;white-space:nowrap}
+.ret-table td{padding:7px 10px;border-bottom:1px solid #F3F4F6;vertical-align:middle}
+.ret-table tr:hover td{background:#F9FAFB}
+.ret-m1{font-weight:600}
+.ret-high{color:#16A34A}.ret-mid{color:#D97706}.ret-low{color:#DC2626}
+.ret-note{font-size:11px;color:#9CA3AF;margin-top:4px}
+.ret-feb-note{font-size:11px;color:#6B7280;font-style:italic;padding:4px 8px;background:#FEF9C3;border-radius:4px;display:inline-block}
+.ret-region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.ret-rcard{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px}
+.ret-rcard h4{margin:0 0 10px;font-size:13px;font-weight:700;color:#374151}
+.ret-sparkline{width:100%;height:60px}
+
+/* ── Retention sub-nav ── */
+.ret-header{margin-bottom:14px}
+.ret-subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #E5E7EB}
+.ret-snbtn{padding:6px 13px;border:1px solid #E5E7EB;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;font-weight:500;color:#374151;transition:all 0.15s;white-space:nowrap}
+.ret-snbtn:hover{background:#F9FAFB;border-color:#D1D5DB}
+.ret-snbtn.active{background:#111;color:#fff;border-color:#111}
+.ret-view{display:none}
+.ret-view.active{display:block}
+
+/* ── Heatmap ── */
+.hm-wrap{overflow-x:auto}
+.hm-table{border-collapse:separate;border-spacing:2px;font-size:12px}
+.hm-table th{padding:5px 8px;font-weight:600;color:#6B7280;white-space:nowrap;text-align:center;font-size:11px}
+.hm-table th.hm-mkt{text-align:left}
+.hm-cell{padding:5px 8px;border-radius:5px;text-align:center;font-weight:700;white-space:nowrap;min-width:52px;font-size:12px}
+.hm-cell-mkt{padding:5px 8px;white-space:nowrap;font-size:12px;font-weight:500}
+.hm-feb{background:repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 4px,#fff 4px,#fff 8px)!important;color:#9CA3AF!important;font-size:10px!important}
+.hm-na{background:#F9FAFB;color:#D1D5DB;text-align:center}
+.hm-legend{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;font-size:11px;color:#6B7280}
+.hm-swatch{width:20px;height:14px;border-radius:3px;display:inline-block}
+
+/* ── Courier stock ── */
+.stock-total{background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;gap:20px;align-items:center}
+.stock-num{font-size:34px;font-weight:900;line-height:1}
+.stock-sub{font-size:12px;opacity:0.85;margin-top:3px}
+.stock-row{display:grid;grid-template-columns:120px 1fr 80px;align-items:center;gap:8px;margin-bottom:4px}
+.stock-bar-bg{background:#F3F4F6;border-radius:4px;height:20px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:11px;font-weight:700;color:#fff;transition:width 0.4s ease;min-width:2px}
+.stock-mkt{font-size:12px;font-weight:500;color:#374151;display:flex;align-items:center;gap:4px}
+.stock-val{font-size:12px;font-weight:700;color:#374151;text-align:right}
+
+/* ── Scatter / correlation ── */
+.scatter-wrap{overflow-x:auto;margin-bottom:12px}
+.scatter-svg{overflow:visible}
+.scatter-quad-label{font-size:10px;fill:#D1D5DB;font-style:italic}
+
+/* ── Benchmarks ── */
+.bench-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.bench-card{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px}
+.bench-card h4{margin:0 0 10px;font-size:13px;font-weight:700;color:#374151;display:flex;align-items:center;gap:6px}
+.bench-row{display:grid;grid-template-columns:110px 1fr 55px;align-items:center;gap:6px;margin-bottom:5px}
+.bench-bar-wrap{position:relative;height:18px;background:#F3F4F6;border-radius:4px;overflow:hidden}
+.bench-bar-pos{position:absolute;top:0;height:100%;background:#86EFAC;border-radius:0 4px 4px 0;transition:width 0.3s}
+.bench-bar-neg{position:absolute;top:0;right:0;height:100%;background:#FECACA;border-radius:4px 0 0 4px;transition:width 0.3s}
+.bench-median-tick{position:absolute;top:0;bottom:0;width:2px;background:#6B7280}
+.bench-delta{font-size:11px;font-weight:700;text-align:right}
+.bench-delta.pos{color:#16A34A}.bench-delta.neg{color:#DC2626}.bench-delta.neu{color:#9CA3AF}
+.bench-mkt{font-size:12px;font-weight:500;color:#374151}
+.bench-med-label{font-size:11px;color:#6B7280;margin-bottom:8px}
+
+/* ── Intervention tracker ── */
+.int-form{background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px}
+.int-form-grid{display:grid;grid-template-columns:1fr 1fr 140px 1fr auto;gap:8px;align-items:end}
+.int-flbl{font-size:11px;font-weight:600;color:#6B7280;display:block;margin-bottom:3px}
+.int-sel,.int-inp{width:100%;padding:7px 9px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;box-sizing:border-box}
+.int-add{padding:8px 16px;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+.int-add:hover{background:#333}
+.int-table{width:100%;border-collapse:collapse;font-size:13px}
+.int-table th{background:#F9FAFB;padding:7px 10px;font-weight:600;color:#374151;border-bottom:2px solid #E5E7EB;text-align:left;font-size:12px}
+.int-table td{padding:7px 10px;border-bottom:1px solid #F3F4F6;vertical-align:top;font-size:12px}
+.int-table tr:hover td{background:#FAFAFA}
+.int-del{cursor:pointer;color:#EF4444;font-size:11px;background:none;border:none;padding:2px 5px;border-radius:4px}
+.int-del:hover{background:#FEE2E2}
+.int-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:#EFF6FF;color:#1D4ED8}
+.int-empty{text-align:center;padding:30px;color:#9CA3AF;font-size:13px}
+
+
+/* ── Column header tooltips ── */
+.thwrap{display:inline-flex;align-items:center;gap:5px}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#D1D5DB;color:#6B7280;font-size:9px;font-weight:700;cursor:default;flex-shrink:0;position:relative;font-style:normal;line-height:1}
+.tip::after{content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1F2937;color:#fff;font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.5;padding:8px 11px;border-radius:7px;white-space:normal;min-width:220px;max-width:300px;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.15s;box-shadow:0 4px 12px rgba(0,0,0,0.25)}
+.tip:hover::after{opacity:1}
+th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
+
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="hl">
+    <div class="wdot"></div>
+    <div>
+      <h1>Courier Retention — Early Warning System</h1>
+      <div class="header-sub">Leading indicators · 4–6 weeks ahead of M1 retention</div>
+    </div>
+    <span class="wpill">Live · Snowflake</span>
+  </div>
+  <div class="hr-right">Data: week of 2026-06-01</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('countries',this)">🌍 4-Week Forecast</div>
+  <div class="tab" onclick="switchTab('regions',this)">📍 Regions</div>
+  <div class="tab" onclick="switchTab('retention',this)">📊 Retention</div>
+  <div class="tab" onclick="switchTab('faq',this)">📖 Methodology &amp; FAQ</div>
+</div>
+
+<!-- Summary strip (Countries only) -->
+<div class="strip" id="strip-bar">
+  <div class="spill all active" onclick="setFilter('all',this)"><span class="pill-count" id="cnt-all">0</span><span>All Markets</span></div>
+  <div class="sdiv"></div>
+  <div class="spill crit" onclick="setFilter('critical',this)"><span class="sled crit"></span><span class="pill-count" id="cnt-crit">0</span><span>Critical</span></div>
+  <div class="spill watch" onclick="setFilter('watch',this)"><span class="sled watch"></span><span class="pill-count" id="cnt-watch">0</span><span>Watch</span></div>
+  <div class="spill stable" onclick="setFilter('stable',this)"><span class="sled stable"></span><span class="pill-count" id="cnt-stable">0</span><span>Stable</span></div>
+</div>
+
+<!-- Countries Panel -->
+<div class="panel active" id="panel-countries">
+  <div class="tcard">
+    <div class="tscroll">
+      <table id="main-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('country')"><div class="thwrap">Market <i class="tip" data-tip="The courier market (country). Click to sort alphabetically.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('region')"><div class="thwrap">Region <i class="tip" data-tip="The operational region grouping this market belongs to (e.g. Central Europe, Nordics). Used to compare similar markets.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('status')"><div class="thwrap">Status <i class="tip" data-tip="Risk classification: Stable = all signals within baseline; Watch = 1–2 signals elevated, M1 impact likely in 4–8 weeks; Critical = multiple signals elevated, M1 impact likely in 1–3 weeks.">?</i><span class="si">↕</span></div></th>
+            <th class="sorted" onclick="sortBy('score')"><div class="thwrap">Score <i class="tip" data-tip="Composite health score (0–100). Computed as a weighted average across 5 signals, each measured as % of 8-week baseline. Higher = healthier. Scores below 70 trigger Watch; below 50 trigger Critical.">?</i><span class="si">↓</span></div></th>
+            <th onclick="sortBy('ftdConv')"><div class="thwrap">FTD Conv. <i class="tip" data-tip="First-Time Delivery Conversion: % of newly onboarded couriers who complete at least one delivery within 7 days of activation. Source: COURIER_ONBOARDING_COHORT.CONVERSION_7_DAYS. Higher is better. N/A = metric not tracked or sample too small.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('deliveries')"><div class="thwrap">Deliveries/wk <i class="tip" data-tip="Average deliveries completed per active courier per week in the latest data week. Measures engagement intensity. Compared against each market's own 8-week median baseline. Higher is better.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('offerDecline')"><div class="thwrap">Offer Decline <i class="tip" data-tip="% of task offers (delivery requests) that couriers reject after going online. Formula: 1 − (accepted / served). Universally available across all markets. Delta shows deviation from 8-week baseline — a rising decline rate is an early disengagement signal. Lower is better.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('driver')"><div class="thwrap">Primary Driver <i class="tip" data-tip="The signal(s) most responsible for the current score deviation. Identified by finding which signal has the highest absolute deviation from baseline. '—' means all signals are within normal variance.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('m1Impact')"><div class="thwrap">M1 Impact <i class="tip" data-tip="Estimated weeks until current signal deviations would typically show up in the M1 retention rate, based on known lag patterns between onboarding behaviour and monthly activity. Ranges from 1 week (imminent) to 5+ weeks (early warning). '—' = no elevated signals.">?</i><span class="si">↕</span></div></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="tfoot">Source: Snowflake PRODUCTION · 5 signals vs. 8-week baseline · Data week 2026-06-01 · Click any row to inspect</div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        <span>When is the cohort date updated, and why do different markets show different months?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-body">
+        <p>The <strong>cohort date</strong> in the Retention tab is the calendar month when a batch of couriers made their <em>first ever delivery</em>. It is not the current date — it reflects when each group of new couriers joined the platform.</p>
+        <p>The most recent cohort shown per market is the latest one where M1 can already be computed. Computing M1 requires the following calendar month to have fully elapsed (so we know whether each courier was active in their second month). In practice this means the Retention data lags the current date by 4–8 weeks.</p>
+        <p>Different markets show different "latest" cohort months for three reasons:</p>
+        <ul>
+          <li><strong>Cohort size filter:</strong> Cohorts with fewer than 20 new couriers are excluded as statistically unreliable. Small markets (Iceland, Luxembourg) therefore show older dates because recent months didn't meet the minimum threshold.</li>
+          <li><strong>Feb 2026 anomaly:</strong> February 2026 cohorts are automatically excluded across all markets due to a known onboarding flow change that suppressed apparent M1 figures. Markets where March is the most recent non-excluded cohort will show "2026-03".</li>
+          <li><strong>Market launch date:</strong> Recently launched markets have fewer historical cohort months available.</li>
+        </ul>
+        <p>The Retention data is refreshed weekly alongside the main EWS signals, using the same Snowflake PRODUCTION tables.</p>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        <span>Why does FTD Conversion show 0% or N/A for some countries?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-body">
+        <p>The FTD (First-Time Delivery) Conversion Rate is defined as the percentage of newly onboarded couriers who complete a delivery within 7 days of activation. It is sourced from the <code>CONVERSION_7_DAYS</code> column in <code>COURIER_ONBOARDING_COHORT</code>.</p>
+        <p>Three distinct situations cause 0% or N/A to appear:</p>
+        <ul>
+          <li><strong>Austria (N/A):</strong> The <code>CONVERSION_7_DAYS</code> column is systematically empty (NULL / 0) for all Austrian couriers in the Snowflake table. This is a data pipeline gap — the metric is not tracked for Austria's onboarding flow. It does not reflect a real 0% conversion. Marked N/A to avoid misleading the score.</li>
+          <li><strong>Iceland &amp; Finland (N/A):</strong> Both are very small markets with 15–25 new couriers per week. A single week with no 7-day conversions in such a tiny cohort produces 0%, while the following week might show 100%. The metric swings between extremes with no statistical meaning. Marked N/A to prevent false critical signals from driving incorrect interventions.</li>
+          <li><strong>Any market showing a real 0%:</strong> If a larger market ever shows 0% FTD Conversion with a stable baseline above 0%, that is a genuine signal — it means no newly onboarded couriers completed a delivery in the current data week, which would be a serious early warning worth escalating immediately.</li>
+        </ul>
+        <p>The FTD conversion signal uses a higher-is-better direction: a drop below the 8-week baseline increases the risk score. N/A markets are excluded from score computation for that signal.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Regions Panel -->
+<div class="panel" id="panel-regions">
+  <div class="rpage">
+    <div class="rsummary" id="region-cards"></div>
+    <div id="region-detail-area"></div>
+  </div>
+</div>
+
+<!-- Retention Panel -->
+<div class="panel" id="panel-retention">
+  <div id="retention-content" style="padding:18px 22px"></div>
+</div>
+
+<!-- FAQ Panel -->
+<div class="panel" id="panel-faq">
+  <div class="faqwrap">
+    <div class="faq-intro">
+      This FAQ explains how the Early Warning System works, how each metric is defined, and how to interpret the watchlist.
+      The system is designed to surface retention risk <strong>4–6 weeks before it appears in standard M1 KPIs</strong> — giving market teams enough time to intervene.
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        How does the Early Warning System work?
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body open">
+        <div class="faq-a">
+          <p>Standard retention metrics (M1 active rate, M3 retention) are cohort-based and inherently lagging — by the time a drop appears, the affected cohort has already been lost. The EWS works by instrumenting the <em>funnel events that predict</em> retention rather than measuring retention itself.</p>
+          <p>Each week, the system measures 6 leading indicators for each market's <strong>newest courier cohort</strong>. Each indicator is compared against that market's 8-week rolling baseline and scored. The 6 scores are combined into a single composite health score (0–100). Markets below defined thresholds are flagged as <em>Watch</em> or <em>Critical</em>.</p>
+          <p>The typical lead time is <strong>4–6 weeks</strong>: a drop in FTD conversion this week will show up in M1 retention in 3–4 weeks. This dashboard updates every Monday with the previous week's cohort data.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        How is the Composite Score calculated?
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body open">
+        <div class="faq-q">Score formula</div>
+        <div class="faq-a">
+          Each of the 6 signals is scored 0–100 based on its deviation from the market's 8-week baseline. The composite score is a weighted average:
+        </div>
+        <div class="formula-box">
+Score = 0.30 × FTD_Conversion
+      + 0.20 × T7_Trips
+      + 0.15 × FTD_Earnings
+      + 0.15 × T14_Active_Hours
+      + 0.10 × Shift_Cancellation (inverted)
+      + 0.10 × Onboarding_Completion
+        </div>
+        <div class="faq-q">Signal scoring (per signal)</div>
+        <div class="faq-a">
+          <p>Each signal's raw value is compared to its 8-week baseline. The per-signal score is:</p>
+          <ul style="margin-left:16px;font-size:13px;color:#374151;line-height:1.8">
+            <li><strong>100</strong> — at or above baseline</li>
+            <li><strong>50–99</strong> — 1–15% below baseline (linear interpolation)</li>
+            <li><strong>0–49</strong> — more than 15% below baseline (linear interpolation)</li>
+          </ul>
+          <p style="margin-top:8px">For inverse metrics (Shift Cancellation), the logic is reversed: values <em>above</em> baseline score low.</p>
+        </div>
+        <table class="weight-table">
+          <tr><th>Signal</th><th>Weight</th><th>Rationale</th></tr>
+          <tr><td>FTD Conversion Rate</td><td>30%</td><td>Strongest single predictor of M1 retention</td></tr>
+          <tr><td>T7 Trips (median)</td><td>20%</td><td>Captures early habit formation — best M3 predictor</td></tr>
+          <tr><td>FTD Earnings Quality</td><td>15%</td><td>Bad first earnings = churn risk even after FTD</td></tr>
+          <tr><td>T14 Active Hours</td><td>15%</td><td>Engagement depth; couriers with ≥15h in wk 1–2 have 2× retention</td></tr>
+          <tr><td>Shift Cancellation Rate</td><td>10%</td><td>Rising cancellations precede disengagement by 2–3 weeks</td></tr>
+          <tr><td>Onboarding Completion</td><td>10%</td><td>Friction in onboarding predicts lower FTD rate</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        Signal definitions
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body">
+        <div class="faq-q">FTD Conversion Rate (%)</div>
+        <div class="faq-a"><p>The percentage of newly activated couriers who complete their first delivery within 7 days of account approval. "Activated" means the courier has passed all onboarding steps and is eligible to receive orders.</p><p><strong>Why it matters:</strong> The most predictive single metric for M1 retention. Couriers who don't complete a first delivery within 7 days have a &lt;10% chance of being active at M1.</p><p><strong>Lead time:</strong> 3–4 weeks ahead of M1 retention.</p></div>
+
+        <div class="faq-q">T7 Trips — Deliveries in first 7 days (median)</div>
+        <div class="faq-a"><p>The median number of completed deliveries among couriers who completed at least one (i.e., excluding those who never converted). This measures how deeply new couriers engage once they start.</p><p><strong>Why it matters:</strong> Couriers with 3+ trips in week 1 show 2× M3 retention vs. those with 1–2 trips. It captures whether couriers are building a working habit or just dipping their toes in.</p><p><strong>Lead time:</strong> 5–6 weeks ahead of M3 retention.</p></div>
+
+        <div class="faq-q">FTD Earnings Quality (avg. €)</div>
+        <div class="faq-a"><p>Average gross earnings from a courier's <em>first delivery</em>. This reflects the earnings experience of the very first trip — distance, pay per km, wait time at pickup, tip.</p><p><strong>Why it matters:</strong> A bad first earnings experience is a churn signal disguised as a neutral event. Couriers whose first trip earns significantly below expectations are unlikely to return, even after successfully converting.</p></div>
+
+        <div class="faq-q">T14 Active Hours — Hours on shift in first 14 days</div>
+        <div class="faq-a"><p>Total hours the courier spent with the app in "available" or "on delivery" state during their first two weeks. Measures engagement depth beyond trip count.</p><p><strong>Why it matters:</strong> Distinguishes casual explorers from committed couriers. Couriers with ≥15 active hours in their first 14 days have materially better M1 and M3 retention curves.</p></div>
+
+        <div class="faq-q">Shift Cancellation Rate (%)</div>
+        <div class="faq-a"><p>The percentage of scheduled or committed shifts that were cancelled by the courier (in markets with scheduled supply) or the percentage of active sessions ended within 15 minutes of starting (in open-market regions). Measured on the current week's new cohort.</p><p><strong>Why it matters:</strong> Rising cancellations are a behavioural pre-churn signal — couriers who are disengaging tend to start accepting shifts then abandoning them 2–3 weeks before they go inactive.</p></div>
+
+        <div class="faq-q">Onboarding Completion Rate (%)</div>
+        <div class="faq-a"><p>The percentage of new signups who complete all required onboarding steps (document upload, profile completion, equipment pickup if applicable) within 7 days of signup.</p><p><strong>Why it matters:</strong> Onboarding friction reduces the FTD conversion pool before a courier ever attempts a delivery. A drop in onboarding completion will show up in FTD conversion 1–2 weeks later.</p><p><strong>Lead time:</strong> Earliest available signal — 6–8 weeks ahead of M1 retention.</p></div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        How is the baseline calculated?
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body">
+        <div class="faq-a">
+          <p>Each market has its own rolling baseline computed as the <strong>8-week trailing median</strong> of each signal, excluding the current week. The median is used instead of the mean to reduce sensitivity to outlier weeks (e.g., holiday weeks, launch campaigns).</p>
+          <p>Markets with fewer than 4 weeks of data (new markets) use a <strong>global peer baseline</strong> derived from similarly-sized markets at comparable stages of growth, until enough local history accumulates.</p>
+          <p>Baselines are recalculated weekly. A market whose baseline itself has been declining for 8 weeks will have a "compressed" baseline — this is intentional and visible in the trend sparkline, which shows the raw absolute values over time.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        How are status thresholds (Critical / Watch / Stable) determined?
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body">
+        <div class="faq-a"><p>Status is determined by a combination of composite score and signal concentration:</p></div>
+        <table class="threshold-table">
+          <tr><th>Status</th><th>Composite Score</th><th>OR Signal Condition</th></tr>
+          <tr><td><span class="badge critical"><span class="bdot critical"></span>Critical</span></td><td>Below 50</td><td>FTD conversion dropped &gt;15% WoW, or 3+ signals simultaneously deteriorating</td></tr>
+          <tr><td><span class="badge watch"><span class="bdot watch"></span>Watch</span></td><td>50–69</td><td>1–2 signals below baseline by &gt;1 std deviation, consistent for ≥2 weeks</td></tr>
+          <tr><td><span class="badge stable"><span class="bdot stable"></span>Stable</span></td><td>70–100</td><td>All signals within normal variance (±1 std deviation of baseline)</td></tr>
+        </table>
+        <div class="faq-a" style="margin-top:10px"><p>The multi-signal condition matters: a single metric moving is noise; two or three moving together is signal. The composite score alone does not determine status — a market can be flagged Critical due to a single dramatic FTD drop even if other signals are healthy.</p></div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        How are Region scores calculated?
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body">
+        <div class="faq-a">
+          <p>The region composite score is the <strong>size-weighted average</strong> of constituent market scores, where size weight is proportional to the number of active couriers in each market (approximated by cohort volume). In this prototype, it is a simple average.</p>
+          <p>Region status is determined by the worst constituent market: if any market in the region is <em>Critical</em>, the region is <em>Critical</em>. If any market is <em>Watch</em>, the region is <em>Watch</em>. All <em>Stable</em> → region is <em>Stable</em>.</p>
+          <p>Germany and Israel are shown as standalone regions (single-market) given their operational independence.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-section-header" onclick="toggleFaq(this)">
+        How should I act on this watchlist?
+        <span class="fchv">▼</span>
+      </div>
+      <div class="faq-section-body">
+        <div class="faq-q">What does "M1 Impact in X weeks" mean?</div>
+        <div class="faq-a"><p>It estimates how many weeks until the current leading-indicator degradation will show up in your standard M1 retention metric, based on typical cohort flow. A market showing "1 week" is either already impacting M1 or will do so in the current reporting cycle.</p></div>
+        <div class="faq-q">What action should I take for a Critical market?</div>
+        <div class="faq-a"><p>Each market's detail panel contains a <em>Hypothesis</em> (likely root cause derived from signal pattern) and a <em>Recommended lever</em>. These are starting points for investigation — verify the hypothesis with local data before deploying a lever. Escalate to the market operations owner within 48h of a Critical flag.</p></div>
+        <div class="faq-q">How do I know if an intervention worked?</div>
+        <div class="faq-a"><p>The trend sparkline shows the 8-week rolling FTD conversion. If an intervention was deployed, you should see the trend stabilise or reverse within 2–3 weeks. Because the baseline is rolling, a sustained recovery will eventually raise the baseline — plan to revisit the threshold if the market consistently outperforms its old baseline.</p></div>
+        <div class="faq-q">The hypothesis seems wrong for my market — what should I do?</div>
+        <div class="faq-a"><p>The hypotheses are auto-generated from signal patterns and are directional, not definitive. Use them as starting points. If your local knowledge contradicts the hypothesis, investigate both — you may be seeing a novel pattern. Feedback to the analytics team helps improve hypothesis quality over time.</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const REGION_MAP = {
+  DE:'GERMANY', IL:'ISRAEL',
+  DK:'NORTH', EE:'NORTH', FI:'NORTH', IS:'NORTH', LT:'NORTH', LU:'NORTH', LV:'NORTH', NO:'NORTH', SE:'NORTH',
+  AT:'CENTRAL', CZ:'CENTRAL', HR:'CENTRAL', HU:'CENTRAL', PL:'CENTRAL', RS:'CENTRAL', SK:'CENTRAL', SI:'CENTRAL',
+  GR:'SOUTH', CY:'SOUTH', MT:'SOUTH', AZ:'SOUTH', GE:'SOUTH', KZ:'SOUTH',
+};
+const REGION_META = {
+  GERMANY: {label:'Germany', color:'#F59E0B', type:'standalone'},
+  ISRAEL:  {label:'Israel',  color:'#EF4444', type:'standalone'},
+  NORTH:   {label:'North',   color:'#3B82F6', type:'group'},
+  CENTRAL: {label:'Central', color:'#8B5CF6', type:'group'},
+  SOUTH:   {label:'South',   color:'#F97316', type:'group'},
+  OTHER:   {label:'Other',   color:'#6B7280', type:'group'},
+};
+
+const MARKETS = [
+  {id:'DE',country:'Germany',flag:'🇩🇪',status:'stable',score:63.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:95.5,b:87.7,d:7.8,u:'%',hb:true},
+     deliveries:{v:66.2,b:64.7,d:1.5,u:'',hb:true},
+     ftdEarn:{v:513.3,b:507.1,d:6.2,u:'',hb:true},
+     dutyHours:{v:27.1,b:27.2,d:-0.1,u:'h',hb:true},
+     offerDecline:{v:55.2,b:54.3,d:0.9,u:'%',hb:false}
+   },
+   driver:"shift cancellations",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[63.1,64.8,67.8,70.5,60.8,63.4,66.2,12.1],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'IL',country:'Israel',flag:'🇮🇱',status:'stable',score:81.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:57.8,b:16.8,d:41.0,u:'%',hb:true},
+     deliveries:{v:50.5,b:48.6,d:2.0,u:'',hb:true},
+     ftdEarn:{v:1363.8,b:1296.3,d:67.5,u:'',hb:true},
+     dutyHours:{v:19.9,b:19.1,d:0.8,u:'h',hb:true},
+     offerDecline:{v:44.8,b:45.0,d:-0.2,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[46.4,48.3,50.9,50.3,48.1,49.2,50.5,12.6],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'DK',country:'Denmark',flag:'🇩🇰',status:'stable',score:75.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:58.1,b:29.6,d:28.5,u:'%',hb:true},
+     deliveries:{v:52.9,b:49.4,d:3.5,u:'',hb:true},
+     ftdEarn:{v:2905.0,b:2677.6,d:227.4,u:'',hb:true},
+     dutyHours:{v:20.7,b:21.0,d:-0.3,u:'h',hb:true},
+     offerDecline:{v:25.0,b:25.4,d:-0.4,u:'%',hb:false}
+   },
+   driver:"active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Activate an offer-acceptance recovery campaign for couriers with elevated decline rates. Personalised message explaining optimal zone strategy + push alert for high-demand hours in their typical area.",m1weeks:null,
+   trend:[45.4,51.3,51.8,50.3,47.5,53.5,52.9,11.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'EE',country:'Estonia',flag:'🇪🇪',status:'watch',score:51.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:77.4,b:32.4,d:45.0,u:'%',hb:true},
+     deliveries:{v:39.7,b:42.2,d:-2.6,u:'',hb:true},
+     ftdEarn:{v:167.8,b:169.8,d:-2.0,u:'',hb:true},
+     dutyHours:{v:17.2,b:19.1,d:-1.8,u:'h',hb:true},
+     offerDecline:{v:50.4,b:50.7,d:-0.3,u:'%',hb:false}
+   },
+   driver:"active hours + weekly deliveries",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Run a CRM lifecycle campaign targeting couriers in weeks 2–4: earnings milestone push, personalised goal-setting message, and a 'Keep it up' reward if they hit 10 deliveries in the first 2 weeks.",m1weeks:5,
+   trend:[40.9,39.9,46.5,42.4,40.3,40.2,39.7,10.9],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'FI',country:'Finland',flag:'🇫🇮',status:'critical',score:30.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:null,b:null,d:null,u:'%',hb:true,na:true},
+     deliveries:{v:75.2,b:75.3,d:-0.1,u:'',hb:true},
+     ftdEarn:{v:358.8,b:358.7,d:0.1,u:'',hb:true},
+     dutyHours:{v:47.1,b:47.8,d:-0.8,u:'h',hb:true},
+     offerDecline:{v:16.2,b:15.7,d:0.5,u:'%',hb:false}
+   },
+   driver:"FTD conversion + active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Trigger a high-urgency reactivation flow for couriers who drop below 5h platform time in week 1. Combine a push + email with an earnings incentive framed around their first-month earning potential.",m1weeks:2,
+   trend:[77.3,76.9,74.4,73.4,71.7,74.4,75.2,11.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'IS',country:'Iceland',flag:'🇮🇸',status:'watch',score:50.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:null,b:null,d:null,u:'%',hb:true,na:true},
+     deliveries:{v:71.2,b:68.1,d:3.1,u:'',hb:true},
+     ftdEarn:{v:99362.9,b:97885.8,d:1477.1,u:'',hb:true},
+     dutyHours:{v:31.4,b:32.4,d:-1.0,u:'h',hb:true},
+     offerDecline:{v:58.9,b:54.0,d:4.9,u:'%',hb:false}
+   },
+   driver:"active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Deploy a hyper-personalised onboarding sequence given the small cohort size. 1:1-feel comms (push + email) highlighting local earning benchmarks and community belonging.",m1weeks:5,
+   trend:[57.9,71.0,74.6,74.1,66.7,67.5,71.2,12.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'LT',country:'Lithuania',flag:'🇱🇹',status:'watch',score:55.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:73.5,b:44.4,d:29.1,u:'%',hb:true},
+     deliveries:{v:37.3,b:38.0,d:-0.7,u:'',hb:true},
+     ftdEarn:{v:140.0,b:142.5,d:-2.5,u:'',hb:true},
+     dutyHours:{v:25.0,b:25.1,d:-0.1,u:'h',hb:true},
+     offerDecline:{v:43.7,b:44.0,d:-0.3,u:'%',hb:false}
+   },
+   driver:"weekly deliveries",hypo:"Weekly deliveries per active courier are below baseline. Couriers are online but completing fewer orders \u2014 review order availability and routing efficiency.",lever:"Launch a delivery-frequency nurture campaign: send couriers a personalised 'earnings gap' message showing how many more orders it takes to reach their weekly goal, with a mid-week nudge if they're below pace.",m1weeks:5,
+   trend:[38.6,35.5,38.8,38.3,38.2,37.7,37.3,8.2],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'LU',country:'Luxembourg',flag:'🇱🇺',status:'stable',score:69.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:100.0,b:25.0,d:75.0,u:'%',hb:true},
+     deliveries:{v:59.3,b:56.9,d:2.4,u:'',hb:true},
+     ftdEarn:{v:572.6,b:540.2,d:32.4,u:'',hb:true},
+     dutyHours:{v:38.0,b:38.4,d:-0.4,u:'h',hb:true},
+     offerDecline:{v:11.7,b:10.9,d:0.8,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Given small market size, deploy a high-touch CRM onboarding sequence: manual-feel push communications, hyper-local demand previews, and a month-1 earnings guarantee message to reduce uncertainty.",m1weeks:null,
+   trend:[54.9,57.8,59.2,57.3,54.0,54.1,59.3,10.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'LV',country:'Latvia',flag:'🇱🇻',status:'stable',score:63.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:58.6,b:26.6,d:32.0,u:'%',hb:true},
+     deliveries:{v:37.4,b:38.0,d:-0.6,u:'',hb:true},
+     ftdEarn:{v:127.2,b:126.2,d:0.9,u:'',hb:true},
+     dutyHours:{v:23.8,b:23.4,d:0.4,u:'h',hb:true},
+     offerDecline:{v:62.6,b:61.6,d:1.0,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[37.3,33.3,38.6,40.5,38.6,39.6,37.4,8.7],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'NO',country:'Norway',flag:'🇳🇴',status:'watch',score:52.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:29.4,b:15.2,d:14.2,u:'%',hb:true},
+     deliveries:{v:45.7,b:45.6,d:0.1,u:'',hb:true},
+     ftdEarn:{v:3653.1,b:3721.9,d:-68.8,u:'',hb:true},
+     dutyHours:{v:25.4,b:26.0,d:-0.6,u:'h',hb:true},
+     offerDecline:{v:56.6,b:53.2,d:3.4,u:'%',hb:false}
+   },
+   driver:"active hours",hypo:"Active duty hours per courier are below baseline, suggesting reduced time-on-platform. Monitor for disengagement patterns in the last 2\u20133 weeks of cohort data.",lever:"Activate a re-engagement push for couriers showing declining duty hours. Focus on the 'quiet period' — identify couriers who went online <3 days in the last 2 weeks and send an earnings-recovery message.",m1weeks:5,
+   trend:[44.3,44.4,43.9,46.9,47.3,47.8,45.7,9.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'SE',country:'Sweden',flag:'🇸🇪',status:'stable',score:70.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:45.5,b:10.0,d:35.5,u:'%',hb:true},
+     deliveries:{v:32.4,b:30.8,d:1.6,u:'',hb:true},
+     ftdEarn:{v:1867.7,b:1772.6,d:95.1,u:'',hb:true},
+     dutyHours:{v:18.6,b:19.4,d:-0.8,u:'h',hb:true},
+     offerDecline:{v:51.0,b:46.4,d:4.6,u:'%',hb:false}
+   },
+   driver:"active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[32.3,30.9,29.6,29.4,30.6,33.8,32.4,7.2],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'AT',country:'Austria',flag:'🇦🇹',status:'stable',score:57.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:null,b:null,d:null,u:'%',hb:true,na:true},
+     deliveries:{v:32.8,b:32.1,d:0.8,u:'',hb:true},
+     ftdEarn:{v:179.2,b:168.9,d:10.3,u:'',hb:true},
+     dutyHours:{v:25.1,b:25.0,d:0.1,u:'h',hb:true},
+     offerDecline:{v:46.0,b:45.5,d:0.5,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[30.8,31.8,32.3,33.3,28.0,33.0,32.8,6.2],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'CZ',country:'Czechia',flag:'🇨🇿',status:'stable',score:59.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:66.2,b:39.3,d:26.9,u:'%',hb:true},
+     deliveries:{v:36.1,b:37.4,d:-1.3,u:'',hb:true},
+     ftdEarn:{v:4117.1,b:4126.3,d:-9.1,u:'',hb:true},
+     dutyHours:{v:17.4,b:17.6,d:-0.2,u:'h',hb:true},
+     offerDecline:{v:69.9,b:70.2,d:-0.3,u:'%',hb:false}
+   },
+   driver:"weekly deliveries + active hours",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[37.7,34.6,36.1,39.6,38.4,36.6,36.1,8.8],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'HR',country:'Croatia',flag:'🇭🇷',status:'watch',score:43.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:54.7,b:53.6,d:1.1,u:'%',hb:true},
+     deliveries:{v:104.9,b:109.3,d:-4.4,u:'',hb:true},
+     ftdEarn:{v:434.1,b:433.7,d:0.4,u:'',hb:true},
+     dutyHours:{v:34.9,b:36.8,d:-2.0,u:'h',hb:true},
+     offerDecline:{v:8.0,b:6.7,d:1.3,u:'%',hb:false}
+   },
+   driver:"weekly deliveries + active hours",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Implement a structured 30-day activation journey via CRM: day-7 check-in (earnings recap), day-14 milestone reward, day-21 loyalty nudge. Prioritise email + push for couriers with <8 deliveries in week 2.",m1weeks:5,
+   trend:[110.3,99.0,115.8,112.8,114.8,103.7,104.9,22.5],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'HU',country:'Hungary',flag:'🇭🇺',status:'stable',score:71.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:61.7,b:34.7,d:27.0,u:'%',hb:true},
+     deliveries:{v:50.5,b:48.6,d:1.8,u:'',hb:true},
+     ftdEarn:{v:62580.2,b:60700.0,d:1880.3,u:'',hb:true},
+     dutyHours:{v:20.7,b:20.0,d:0.7,u:'h',hb:true},
+     offerDecline:{v:44.7,b:43.8,d:0.9,u:'%',hb:false}
+   },
+   driver:"shift cancellations",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[47.8,44.9,53.0,50.8,46.8,47.0,50.5,11.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'PL',country:'Poland',flag:'🇵🇱',status:'watch',score:45.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:83.1,b:51.3,d:31.8,u:'%',hb:true},
+     deliveries:{v:22.7,b:24.8,d:-2.0,u:'',hb:true},
+     ftdEarn:{v:376.0,b:394.6,d:-18.6,u:'',hb:true},
+     dutyHours:{v:19.4,b:20.3,d:-0.9,u:'h',hb:true},
+     offerDecline:{v:50.2,b:50.1,d:0.1,u:'%',hb:false}
+   },
+   driver:"weekly deliveries + active hours",hypo:"Both delivery volume and duty hours per courier are below baseline. New couriers appear to be engaging less after their first delivery \u2014 early habit formation may be stalling.",lever:"Scale a mass-personalised lifecycle campaign targeting at-risk cohorts: couriers completing <6 deliveries/week receive a 'Boost your week' push with a time-limited bonus. Segment by city for localised messaging.",m1weeks:5,
+   trend:[25.2,22.6,25.4,25.5,23.2,24.2,22.7,5.7],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'RS',country:'Serbia',flag:'🇷🇸',status:'stable',score:67.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:91.6,b:80.7,d:10.9,u:'%',hb:true},
+     deliveries:{v:87.1,b:81.1,d:6.0,u:'',hb:true},
+     ftdEarn:{v:22961.5,b:23082.4,d:-120.9,u:'',hb:true},
+     dutyHours:{v:36.5,b:35.9,d:0.7,u:'h',hb:true},
+     offerDecline:{v:16.4,b:13.6,d:2.8,u:'%',hb:false}
+   },
+   driver:"shift cancellations",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[82.7,77.7,86.0,87.9,83.2,83.3,87.1,16.8],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'SK',country:'Slovakia',flag:'🇸🇰',status:'stable',score:61.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:63.3,b:32.5,d:30.8,u:'%',hb:true},
+     deliveries:{v:49.7,b:51.3,d:-1.6,u:'',hb:true},
+     ftdEarn:{v:212.2,b:207.5,d:4.7,u:'',hb:true},
+     dutyHours:{v:23.4,b:23.0,d:0.5,u:'h',hb:true},
+     offerDecline:{v:46.1,b:46.5,d:-0.4,u:'%',hb:false}
+   },
+   driver:"weekly deliveries",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Implement a scheduled-market engagement campaign: send couriers proactive messages about upcoming shift availability, paired with an earnings projection for the week ahead to reduce uncertainty-driven declines.",m1weeks:null,
+   trend:[53.0,48.2,51.3,54.9,50.9,49.1,49.7,10.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'SI',country:'Slovenia',flag:'🇸🇮',status:'watch',score:54.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:17.4,b:15.5,d:1.9,u:'%',hb:true},
+     deliveries:{v:53.4,b:53.3,d:0.1,u:'',hb:true},
+     ftdEarn:{v:249.9,b:230.1,d:19.8,u:'',hb:true},
+     dutyHours:{v:18.3,b:18.3,d:-0.0,u:'h',hb:true},
+     offerDecline:{v:30.3,b:29.7,d:0.6,u:'%',hb:false}
+   },
+   driver:"shift cancellations",hypo:"Shift cancellation rate is elevated relative to baseline \u2014 a behavioural pre-churn signal. Couriers starting to disengage tend to cancel shifts 2\u20133 weeks before going inactive.",lever:"Deploy a disengagement early-warning CRM flow: when offer decline rises, trigger a targeted push within 48h to affected couriers offering flexibility options and highlighting upcoming high-demand windows.",m1weeks:5,
+   trend:[53.1,46.7,51.2,54.9,56.0,54.1,53.4,12.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'GR',country:'Greece',flag:'🇬🇷',status:'stable',score:76.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:86.1,b:49.7,d:36.4,u:'%',hb:true},
+     deliveries:{v:48.8,b:45.3,d:3.5,u:'',hb:true},
+     ftdEarn:{v:158.0,b:161.0,d:-3.0,u:'',hb:true},
+     dutyHours:{v:20.1,b:20.2,d:-0.1,u:'h',hb:true},
+     offerDecline:{v:26.6,b:27.9,d:-1.3,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"Run a proactive retention campaign for the growing cohort: week-2 personalised earnings recap, week-4 milestone badge, and a refer-a-friend incentive to increase community stickiness.",m1weeks:null,
+   trend:[45.7,46.8,47.3,44.8,46.0,45.2,48.8,11.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'CY',country:'Cyprus',flag:'🇨🇾',status:'stable',score:80.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:87.1,b:65.0,d:22.1,u:'%',hb:true},
+     deliveries:{v:87.8,b:80.0,d:7.8,u:'',hb:true},
+     ftdEarn:{v:261.6,b:238.7,d:22.9,u:'',hb:true},
+     dutyHours:{v:44.9,b:43.5,d:1.4,u:'h',hb:true},
+     offerDecline:{v:41.8,b:43.0,d:-1.2,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[78.4,82.3,85.0,81.4,83.0,84.1,87.8,15.0],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'MT',country:'Malta',flag:'🇲🇹',status:'stable',score:62.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:83.3,b:77.4,d:5.9,u:'%',hb:true},
+     deliveries:{v:72.9,b:74.9,d:-2.0,u:'',hb:true},
+     ftdEarn:{v:286.6,b:286.5,d:0.0,u:'',hb:true},
+     dutyHours:{v:37.6,b:35.4,d:2.2,u:'h',hb:true},
+     offerDecline:{v:37.4,b:38.5,d:-1.1,u:'%',hb:false}
+   },
+   driver:"weekly deliveries",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[74.5,76.1,76.7,73.8,74.8,77.3,72.9,11.7],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'AZ',country:'Azerbaijan',flag:'🇦🇿',status:'stable',score:80.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:84.0,b:82.9,d:1.1,u:'%',hb:true},
+     deliveries:{v:38.2,b:35.6,d:2.7,u:'',hb:true},
+     ftdEarn:{v:146.0,b:125.3,d:20.8,u:'',hb:true},
+     dutyHours:{v:22.5,b:21.2,d:1.3,u:'h',hb:true},
+     offerDecline:{v:26.7,b:25.3,d:1.4,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[35.0,36.7,36.0,34.0,36.8,35.9,38.2,9.5],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'GE',country:'Georgia',flag:'🇬🇪',status:'stable',score:64.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:79.0,b:51.8,d:27.2,u:'%',hb:true},
+     deliveries:{v:56.0,b:56.0,d:0.0,u:'',hb:true},
+     ftdEarn:{v:414.3,b:420.8,d:-6.5,u:'',hb:true},
+     dutyHours:{v:24.2,b:24.3,d:-0.1,u:'h',hb:true},
+     offerDecline:{v:33.8,b:33.7,d:0.1,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[57.4,54.6,57.5,54.5,54.8,55.4,56.0,12.8],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},
+  {id:'KZ',country:'Kazakhstan',flag:'🇰🇿',status:'stable',score:98.0,scoreDelta:0,
+   signals:{
+     ftdConv:{v:92.7,b:77.5,d:15.2,u:'%',hb:true},
+     deliveries:{v:38.8,b:34.8,d:4.0,u:'',hb:true},
+     ftdEarn:{v:50792.5,b:42782.4,d:8010.1,u:'',hb:true},
+     dutyHours:{v:23.1,b:22.3,d:0.8,u:'h',hb:true},
+     offerDecline:{v:53.3,b:51.3,d:2.0,u:'%',hb:false}
+   },
+   driver:"\u2014",hypo:"All signals within normal variance relative to the 8-week market baseline.",lever:"No intervention needed",m1weeks:null,
+   trend:[34.4,34.0,36.5,34.9,34.8,35.1,38.8,9.4],trendLabels:['04/20','04/27','05/04','05/11','05/18','05/25','06/01','06/08'],dataWeek:'2026-06-01'},];
+
+const RETENTION_DATA = {
+  AT:[{m:'2026-03',s:53,m1:35.8,m2:75.5},{m:'2026-02',s:103,m1:5.8,m2:48.5},{m:'2026-01',s:131,m1:59.5,m2:26.7},{m:'2025-12',s:117,m1:63.2,m2:67.5},{m:'2025-11',s:149,m1:69.8,m2:73.2},{m:'2025-10',s:126,m1:47.6,m2:69.0},{m:'2025-09',s:69,m1:37.7,m2:49.3}],
+  AZ:[{m:'2026-04',s:475,m1:44.2,m2:24.8},{m:'2026-03',s:980,m1:60.2,m2:39.6},{m:'2026-02',s:1428,m1:21.6,m2:39.8},{m:'2026-01',s:1500,m1:66.1,m2:18.7},{m:'2025-12',s:1160,m1:59.9,m2:46.2},{m:'2025-11',s:1133,m1:63.3,m2:41.7},{m:'2025-10',s:1312,m1:61.2,m2:42.4},{m:'2025-09',s:730,m1:67.0,m2:47.1}],
+  CY:[{m:'2026-04',s:159,m1:93.1,m2:78.0},{m:'2026-03',s:554,m1:90.8,m2:84.1},{m:'2026-02',s:483,m1:66.0,m2:81.8},{m:'2026-01',s:492,m1:83.7,m2:55.3},{m:'2025-12',s:437,m1:86.5,m2:77.3},{m:'2025-11',s:363,m1:86.5,m2:76.6},{m:'2025-10',s:279,m1:83.5,m2:75.6},{m:'2025-09',s:57,m1:70.2,m2:68.4}],
+  CZ:[{m:'2026-04',s:192,m1:78.6,m2:46.4},{m:'2026-03',s:708,m1:65.5,m2:56.2},{m:'2026-02',s:931,m1:22.9,m2:52.2},{m:'2026-01',s:918,m1:69.2,m2:19.7},{m:'2025-12',s:572,m1:63.8,m2:53.1},{m:'2025-11',s:722,m1:65.9,m2:52.9},{m:'2025-10',s:788,m1:64.1,m2:51.9},{m:'2025-09',s:467,m1:66.8,m2:59.1}],
+  DE:[{m:'2026-04',s:381,m1:88.7,m2:45.4},{m:'2026-03',s:854,m1:92.0,m2:78.5},{m:'2026-02',s:1322,m1:55.0,m2:70.5},{m:'2026-01',s:863,m1:92.2,m2:47.5},{m:'2025-12',s:847,m1:91.1,m2:77.3},{m:'2025-11',s:1234,m1:89.9,m2:81.8},{m:'2025-10',s:1282,m1:88.1,m2:74.6},{m:'2025-09',s:991,m1:93.9,m2:80.1}],
+  DK:[{m:'2026-04',s:128,m1:67.2,m2:57.8},{m:'2026-03',s:443,m1:59.8,m2:64.6},{m:'2026-02',s:446,m1:22.0,m2:53.6},{m:'2026-01',s:605,m1:51.7,m2:20.5},{m:'2025-12',s:472,m1:48.3,m2:42.6},{m:'2025-11',s:731,m1:51.8,m2:51.8},{m:'2025-10',s:872,m1:51.3,m2:50.8},{m:'2025-09',s:597,m1:36.3,m2:51.3}],
+  EE:[{m:'2026-04',s:46,m1:65.2,m2:39.1},{m:'2026-03',s:119,m1:76.5,m2:67.2},{m:'2026-02',s:85,m1:22.4,m2:54.1},{m:'2026-01',s:742,m1:39.8,m2:7.7},{m:'2025-12',s:305,m1:43.3,m2:27.9},{m:'2025-11',s:581,m1:74.2,m2:31.8},{m:'2025-10',s:407,m1:58.2,m2:36.4},{m:'2025-09',s:101,m1:39.6,m2:47.5}],
+  FI:[{m:'2026-03',s:217,m1:84.3,m2:91.2},{m:'2026-01',s:19,m1:57.9,m2:57.9},{m:'2025-12',s:118,m1:28.0,m2:29.7},{m:'2025-11',s:15,m1:6.7,m2:6.7},{m:'2025-10',s:23,m1:0.0,m2:4.3},{m:'2025-09',s:15,m1:6.7,m2:0.0}],
+  GE:[{m:'2026-04',s:100,m1:84.0,m2:69.0},{m:'2026-03',s:465,m1:81.5,m2:73.8},{m:'2026-02',s:392,m1:44.4,m2:69.1},{m:'2026-01',s:546,m1:82.8,m2:36.1},{m:'2025-12',s:320,m1:66.9,m2:67.5},{m:'2025-11',s:692,m1:63.4,m2:58.5},{m:'2025-10',s:412,m1:74.0,m2:67.0},{m:'2025-09',s:191,m1:64.4,m2:63.9}],
+  GR:[{m:'2026-04',s:235,m1:83.0,m2:66.0},{m:'2026-03',s:919,m1:77.8,m2:79.4},{m:'2026-02',s:836,m1:40.6,m2:70.8},{m:'2026-01',s:1027,m1:78.1,m2:44.3},{m:'2025-12',s:760,m1:66.3,m2:75.5},{m:'2025-11',s:951,m1:61.6,m2:68.7},{m:'2025-10',s:1045,m1:63.3,m2:61.1},{m:'2025-09',s:555,m1:50.5,m2:56.4}],
+  HR:[{m:'2026-04',s:28,m1:96.4,m2:57.1},{m:'2026-03',s:173,m1:84.4,m2:56.1},{m:'2026-02',s:168,m1:35.1,m2:46.4},{m:'2026-01',s:97,m1:83.5,m2:26.8},{m:'2025-12',s:57,m1:77.2,m2:61.4},{m:'2025-11',s:123,m1:76.4,m2:58.5},{m:'2025-10',s:230,m1:79.6,m2:65.2},{m:'2025-09',s:103,m1:86.4,m2:62.1}],
+  HU:[{m:'2026-04',s:252,m1:81.7,m2:64.7},{m:'2026-03',s:698,m1:78.7,m2:72.6},{m:'2026-02',s:775,m1:35.0,m2:67.5},{m:'2026-01',s:702,m1:70.1,m2:28.8},{m:'2025-12',s:387,m1:65.1,m2:68.5},{m:'2025-11',s:728,m1:64.1,m2:64.3},{m:'2025-10',s:973,m1:74.7,m2:69.3},{m:'2025-09',s:669,m1:72.3,m2:69.1}],
+  IL:[{m:'2026-04',s:175,m1:78.9,m2:67.4},{m:'2026-03',s:848,m1:67.0,m2:76.1},{m:'2026-02',s:821,m1:40.4,m2:66.7},{m:'2026-01',s:983,m1:71.1,m2:35.5},{m:'2025-12',s:670,m1:56.0,m2:55.5},{m:'2025-11',s:1246,m1:53.9,m2:44.6},{m:'2025-10',s:1174,m1:66.0,m2:48.1},{m:'2025-09',s:507,m1:47.1,m2:53.6}],
+  IS:[{m:'2025-11',s:16,m1:31.3,m2:25.0},{m:'2025-10',s:22,m1:59.1,m2:77.3},{m:'2025-09',s:18,m1:16.7,m2:44.4}],
+  KZ:[{m:'2026-04',s:495,m1:59.2,m2:35.4},{m:'2026-03',s:2951,m1:65.9,m2:46.5},{m:'2026-02',s:2614,m1:26.9,m2:44.6},{m:'2026-01',s:3112,m1:68.2,m2:19.9},{m:'2025-12',s:3254,m1:62.0,m2:43.0},{m:'2025-11',s:5863,m1:61.1,m2:40.4},{m:'2025-10',s:4995,m1:66.4,m2:42.3},{m:'2025-09',s:1573,m1:68.2,m2:46.5}],
+  LT:[{m:'2026-04',s:40,m1:90.0,m2:80.0},{m:'2026-03',s:178,m1:80.9,m2:74.7},{m:'2026-02',s:208,m1:52.9,m2:70.2},{m:'2026-01',s:980,m1:61.7,m2:21.5},{m:'2025-12',s:356,m1:57.3,m2:41.9},{m:'2025-11',s:479,m1:73.7,m2:55.9},{m:'2025-10',s:518,m1:71.8,m2:68.0},{m:'2025-09',s:273,m1:71.8,m2:70.0}],
+  LU:[{m:'2026-01',s:12,m1:0.0,m2:0.0},{m:'2025-12',s:29,m1:0.0,m2:0.0},{m:'2025-11',s:37,m1:24.3,m2:32.4},{m:'2025-10',s:46,m1:41.3,m2:58.7},{m:'2025-09',s:30,m1:26.7,m2:53.3}],
+  LV:[{m:'2026-04',s:28,m1:89.3,m2:75.0},{m:'2026-03',s:121,m1:74.4,m2:76.0},{m:'2026-02',s:140,m1:35.7,m2:69.3},{m:'2026-01',s:208,m1:67.3,m2:25.5},{m:'2025-12',s:123,m1:62.6,m2:65.9},{m:'2025-11',s:238,m1:71.8,m2:60.5},{m:'2025-10',s:209,m1:32.5,m2:73.7},{m:'2025-09',s:128,m1:14.1,m2:44.5}],
+  MT:[{m:'2026-04',s:97,m1:89.7,m2:75.3},{m:'2026-03',s:219,m1:89.5,m2:80.8},{m:'2026-02',s:186,m1:65.1,m2:84.9},{m:'2026-01',s:166,m1:89.2,m2:58.4},{m:'2025-12',s:134,m1:88.1,m2:77.6},{m:'2025-11',s:160,m1:86.3,m2:78.1},{m:'2025-10',s:199,m1:85.4,m2:78.9},{m:'2025-09',s:108,m1:77.8,m2:78.7}],
+  NO:[{m:'2026-04',s:51,m1:80.4,m2:68.6},{m:'2026-03',s:171,m1:67.8,m2:70.8},{m:'2026-02',s:220,m1:35.5,m2:70.5},{m:'2026-01',s:251,m1:62.2,m2:28.3},{m:'2025-12',s:182,m1:60.4,m2:69.2},{m:'2025-11',s:274,m1:58.8,m2:55.5},{m:'2025-10',s:345,m1:63.2,m2:54.5},{m:'2025-09',s:212,m1:54.2,m2:54.7}],
+  PL:[{m:'2026-04',s:219,m1:66.7,m2:38.8},{m:'2026-03',s:1146,m1:55.6,m2:51.8},{m:'2026-02',s:2094,m1:22.0,m2:38.1},{m:'2026-01',s:1464,m1:65.0,m2:16.8},{m:'2025-12',s:1812,m1:56.7,m2:45.3},{m:'2025-11',s:1877,m1:71.3,m2:52.1},{m:'2025-10',s:1758,m1:73.5,m2:60.0},{m:'2025-09',s:620,m1:49.5,m2:60.2}],
+  RS:[{m:'2026-04',s:128,m1:69.5,m2:50.8},{m:'2026-03',s:443,m1:78.3,m2:57.3},{m:'2026-02',s:563,m1:36.8,m2:55.2},{m:'2026-01',s:690,m1:75.8,m2:30.3},{m:'2025-12',s:957,m1:71.3,m2:59.7},{m:'2025-11',s:692,m1:72.5,m2:51.7},{m:'2025-10',s:627,m1:75.8,m2:58.9},{m:'2025-09',s:494,m1:81.4,m2:60.1}],
+  SE:[{m:'2026-04',s:68,m1:76.5,m2:44.1},{m:'2026-03',s:219,m1:73.5,m2:71.7},{m:'2026-02',s:313,m1:36.4,m2:70.0},{m:'2026-01',s:272,m1:66.9,m2:32.4},{m:'2025-12',s:351,m1:63.8,m2:70.7},{m:'2025-11',s:468,m1:59.0,m2:65.0},{m:'2025-10',s:571,m1:45.7,m2:46.6},{m:'2025-09',s:375,m1:54.4,m2:57.3}],
+  SI:[{m:'2026-04',s:46,m1:84.8,m2:56.5},{m:'2026-03',s:160,m1:81.9,m2:63.8},{m:'2026-02',s:123,m1:28.5,m2:60.2},{m:'2026-01',s:128,m1:69.5,m2:31.3},{m:'2025-12',s:59,m1:61.0,m2:62.7},{m:'2025-11',s:116,m1:73.3,m2:57.8},{m:'2025-10',s:165,m1:63.6,m2:60.6},{m:'2025-09',s:115,m1:79.1,m2:73.0}],
+  SK:[{m:'2026-04',s:51,m1:78.4,m2:51.0},{m:'2026-03',s:172,m1:66.9,m2:64.0},{m:'2026-02',s:282,m1:29.8,m2:66.0},{m:'2026-01',s:286,m1:72.7,m2:24.1},{m:'2025-12',s:319,m1:68.3,m2:58.6},{m:'2025-11',s:203,m1:71.9,m2:61.1},{m:'2025-10',s:247,m1:67.6,m2:46.6},{m:'2025-09',s:120,m1:61.7,m2:62.5}]
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let currentFilter = 'all';
+let currentSort = {key:'score', dir:-1};
+let activeMarket = null;
+let activeRegion = null;
+let charts = {};
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function statusOrd(s){return {critical:0,watch:1,stable:2}[s]??3}
+function scoreColor(sc){return sc<50?'critical':sc<70?'watch':'stable'}
+function dClass(d,hb){if(!d)return 'flat';const good=hb?d>0:d<0;return good?'good':Math.abs(d)>3?'bad':'warn'}
+function fmtD(d,u,hb){if(d===0)return `<span class="md flat">—</span>`;const a=d>0?'▲':'▼';const cls=dClass(d,hb);return `<span class="md ${cls}">${a} ${Math.abs(d)}${u}</span>`}
+function scDelta(d){if(!d)return `<span class="scd flat">—</span>`;return `<span class="scd ${d>0?'up':'down'}">${d>0?'+':''}${d}</span>`}
+function sigFillCls(v,b,hb){const r=hb?(v/b)*100:(b/v)*100;return r>=97?'good':r>=87?'warn':'bad'}
+function sigFillW(v,b){const cap=Math.max(v,b)*1.1;return Math.min(100,(v/cap)*100)}
+function sigBaseLeft(b,v){const cap=Math.max(v,b)*1.1;return Math.min(98,(b/cap)*100)}
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+function switchTab(name, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('strip-bar').style.display = name==='countries' ? 'flex' : 'none';
+  if(name==='regions') renderRegions();
+  if(name==='retention') renderRetention();
+}
+
+
+// ═══════════════════════════════════════════
+// RETENTION HELPERS
+// ═══════════════════════════════════════════
+const FEB_ANOMALY = '2026-02';
+const ALL_MONTHS = ['2026-04','2026-03','2026-02','2026-01','2025-12','2025-11','2025-10','2025-09'];
+
+function retClass(v){return v>=75?'ret-high':v>=55?'ret-mid':'ret-low'}
+
+function m1Bg(v){
+  if(v===null||v===undefined) return '#F3F4F6';
+  if(v<40) return '#FEE2E2'; if(v<55) return '#FECACA';
+  if(v<65) return '#FEF9C3'; if(v<75) return '#DCFCE7'; return '#BBF7D0';
+}
+function m1Fg(v){
+  if(v===null||v===undefined) return '#9CA3AF';
+  if(v<40) return '#991B1B'; if(v<55) return '#9A3412';
+  if(v<65) return '#92400E'; if(v<75) return '#166534'; return '#14532D';
+}
+
+function getLatestM1(data){
+  const f = data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20);
+  return f.length ? f[0] : (data.length ? data[0] : null);
+}
+
+function median(arr){
+  if(!arr.length) return null;
+  const s=[...arr].sort((a,b)=>a-b);
+  const m=Math.floor(s.length/2);
+  return s.length%2?s[m]:(s[m-1]+s[m])/2;
+}
+
+function makeSpark(marketId){
+  const data=RETENTION_DATA[marketId];
+  if(!data) return '<span style="color:#D1D5DB">—</span>';
+  const vals=data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).map(d=>d.m1).reverse();
+  if(vals.length<2) return '<span style="color:#D1D5DB">—</span>';
+  const W=72,H=22,mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>((i/(vals.length-1))*W).toFixed(1)+','+(H-((v-mn)/rng)*(H-5)-2.5).toFixed(1)).join(' ');
+  const col=vals[vals.length-1]>=vals[vals.length-2]?'#16A34A':'#DC2626';
+  return '<svg width="72" height="22" viewBox="0 0 72 22"><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function calcStock(marketId){
+  const data=RETENTION_DATA[marketId];
+  if(!data) return 0;
+  return Math.round(data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(0,3).reduce((s,d)=>s+d.s*(d.m1/100),0));
+}
+
+function calcStockM2(marketId){
+  const data=RETENTION_DATA[marketId];
+  if(!data) return 0;
+  return Math.round(data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(0,3).reduce((s,d)=>s+d.s*(d.m2/100),0));
+}
+
+function switchRetView(name,el){
+  document.querySelectorAll('.ret-snbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.ret-view').forEach(v=>v.classList.remove('active'));
+  const pnl=document.getElementById('ret-view-'+name);
+  if(pnl){
+    pnl.classList.add('active');
+    const fn={overview:renderRetOverview,heatmap:renderRetHeatmap,stock:renderRetStock,
+              benchmarks:renderRetBenchmarks,report:renderRetReport};
+    if(fn[name]&&!pnl.dataset.rendered) fn[name]();
+  }
+}
+
+// ── MAIN ENTRY POINT ──
+function renderRetention(){
+  const container=document.getElementById('retention-content');
+  if(!container) return;
+  container.innerHTML=
+    '<div class="ret-header"><h2 style="font-size:17px;font-weight:800;color:#111;margin:0 0 3px">Courier Retention Analytics</h2>'+
+    '<p style="color:#6B7280;font-size:12px;margin:0">M1 = % active in 2nd month &nbsp;·&nbsp; M2 = % active in 3rd month &nbsp;·&nbsp; Feb 2026 cohorts excluded (onboarding anomaly)</p></div>'+
+    '<div class="ret-subnav">'+
+    '<button class="ret-snbtn active" onclick="switchRetView(\'overview\',this)">📋 Overview</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'heatmap\',this)">🔥 Cohort Heatmap</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'stock\',this)">📦 Courier Stock</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'benchmarks\',this)">⚖️ Regional Benchmarks</button>'+
+    '<button class="ret-snbtn" onclick="switchRetView(\'report\',this)">📋 Monthly Report</button>'+
+    '</div>'+
+    '<div id="ret-view-overview" class="ret-view active"></div>'+
+    '<div id="ret-view-heatmap" class="ret-view"></div>'+
+    '<div id="ret-view-stock" class="ret-view"></div>'+
+    '<div id="ret-view-benchmarks" class="ret-view"></div>'+
+    '<div id="ret-view-report" class="ret-view"></div>';
+  renderRetOverview();
+}
+
+// ── OVERVIEW ──
+let _overviewSort={key:'m1',dir:-1}; // default: M1 descending
+
+function renderRetOverview(){
+  const el=document.getElementById('ret-view-overview');
+  if(!el) return;
+  el.dataset.rendered='1';
+  _buildOverviewTable();
+}
+
+function _sortOverview(key){
+  if(_overviewSort.key===key) _overviewSort.dir*=-1;
+  else{_overviewSort.key=key;_overviewSort.dir=(key==='market'||key==='region')?1:-1;}
+  _buildOverviewTable();
+}
+
+function _buildOverviewTable(){
+  const el=document.getElementById('ret-view-overview');
+  if(!el) return;
+  const k=_overviewSort.key,d=_overviewSort.dir;
+
+  const sortFn=(a,b)=>{
+    const da=RETENTION_DATA[a.id],db=RETENTION_DATA[b.id];
+    const la=da?getLatestM1(da):null,lb=db?getLatestM1(db):null;
+    if(k==='market') return d*a.country.localeCompare(b.country);
+    if(k==='region'){
+      const ra=(REGION_META[REGION_MAP[a.id]]||{label:'ZZZ'}).label;
+      const rb=(REGION_META[REGION_MAP[b.id]]||{label:'ZZZ'}).label;
+      return d*ra.localeCompare(rb);
+    }
+    if(k==='size') return d*((la?.s??-1)-(lb?.s??-1));
+    if(k==='m1')   return d*((la?.m1??-1)-(lb?.m1??-1));
+    if(k==='m2')   return d*((la?.m2??-1)-(lb?.m2??-1));
+    return 0;
+  };
+  const sorted=[...MARKETS].sort(sortFn);
+
+  const si=(key)=>{
+    const arrow=_overviewSort.key===key?(_overviewSort.dir>0?'↑':'↓'):'↕';
+    const bold=_overviewSort.key===key?'font-weight:700;color:#111;':'';
+    return '<span style="margin-left:3px;opacity:0.6;font-size:10px;'+bold+'">'+arrow+'</span>';
+  };
+
+  let rows='';
+  sorted.forEach(m=>{
+    const data=RETENTION_DATA[m.id];
+    if(!data||!data.length){rows+='<tr><td><span class="flag">'+m.flag+'</span> '+m.country+'</td><td colspan="7" style="color:#D1D5DB;font-size:12px">No retention data</td></tr>';return;}
+    const latest=getLatestM1(data);
+    if(!latest) return;
+    const rk=REGION_MAP[m.id]||'OTHER';
+    const rMeta=REGION_META[rk]||{label:rk};
+    const prev=data.filter(d=>d.m!==FEB_ANOMALY&&d.s>20).slice(1,2)[0];
+    const delta=prev?(latest.m1-prev.m1).toFixed(1):null;
+    const dCls=delta>0?'ret-high':delta<0?'ret-low':'ret-mid';
+    const dTxt=delta?(parseFloat(delta)>0?'▲ +':delta<0?'▼ ':'')+(Math.abs(delta))+'pp':'—';
+    rows+='<tr>'+
+      '<td><div style="display:flex;align-items:center;gap:5px"><span class="flag">'+m.flag+'</span><span style="font-size:12px;font-weight:500">'+m.country+'</span></div></td>'+
+      '<td><span class="rtag" style="font-size:10px">'+rMeta.label+'</span></td>'+
+      '<td style="color:#6B7280;font-size:11px">'+latest.m+'</td>'+
+      '<td style="color:#374151;font-size:12px">'+latest.s.toLocaleString()+'</td>'+
+      '<td><span class="ret-m1" style="font-weight:700;color:'+m1Fg(latest.m1)+'">'+latest.m1+'%</span></td>'+
+      '<td><span style="font-weight:600;color:'+m1Fg(latest.m2)+'">'+latest.m2+'%</span></td>'+
+      '<td>'+makeSpark(m.id)+'</td>'+
+      '<td><span class="'+dCls+'" style="font-size:11px;font-weight:600">'+dTxt+'</span></td>'+
+      '</tr>';
+  });
+
+  const thStyle='cursor:pointer;user-select:none;white-space:nowrap';
+  const thead='<thead><tr>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'market\')"><div class="thwrap">Market'+si('market')+' <i class="tip tip-left" data-tip="The courier market. Click to sort alphabetically.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'region\')"><div class="thwrap">Region'+si('region')+' <i class="tip tip-left" data-tip="Operational region grouping. Click to group by region.">?</i></div></th>'+
+    '<th><div class="thwrap">Cohort <i class="tip tip-left" data-tip="The calendar month when these couriers made their first delivery. Lags 4–8 weeks behind today. Feb 2026 excluded (onboarding anomaly).">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'size\')"><div class="thwrap">Size'+si('size')+' <i class="tip tip-left" data-tip="Number of new couriers in the cohort month. Click to sort by cohort size.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'m1\')"><div class="thwrap">M1'+si('m1')+' <i class="tip tip-left" data-tip="Month-1 retention: % still active in the following calendar month. Click to sort best → worst.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'m2\')"><div class="thwrap">M2'+si('m2')+' <i class="tip tip-left" data-tip="Month-2 retention: % still active two months after first delivery. Click to sort.">?</i></div></th>'+
+    '<th style="min-width:80px"><div class="thwrap">M1 Trend <i class="tip tip-left" data-tip="Sparkline: M1 over last 5–8 cohort months (oldest left → newest right). Green = improving, red = declining.">?</i></div></th>'+
+    '<th><div class="thwrap">vs Prev <i class="tip tip-left" data-tip="Change in M1 vs. previous cohort month (pp). ▲ = improvement, ▼ = deterioration.">?</i></div></th>'+
+    '</tr></thead>';
+
+  // Check if container already exists (re-sort), update only tbody + headers
+  const existing=el.querySelector('.ret-overview-table-wrap');
+  if(existing){
+    existing.querySelector('thead').outerHTML=thead; // replace headers
+    existing.querySelector('tbody').innerHTML=rows;
+    // Re-apply header HTML (innerHTML approach is simpler for full refresh)
+    existing.innerHTML='<table class="ret-table">'+thead+'<tbody>'+rows+'</tbody></table>';
+    return;
+  }
+
+  el.innerHTML='<div class="ret-section"><h3>All Markets — Latest Cohort</h3>'+
+    '<p style="font-size:12px;color:#6B7280;margin-bottom:10px">Click column headers to sort. Default: M1 descending (best performing first).</p>'+
+    '<div style="overflow-x:auto" class="ret-overview-table-wrap"><table class="ret-table">'+thead+'<tbody>'+rows+'</tbody></table></div>'+
+    '<div class="ret-note" style="margin-top:8px">Trend sparkline: M1 over time (oldest→newest). Green = improving, Red = declining. "vs Prev" = change from previous cohort month.</div></div>'+
+    '<div class="ret-insights" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">'+
+    '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">'+
+    '<div style="font-weight:700;color:#15803D;margin-bottom:6px">🟢 Consistently Strong</div>'+
+    '<div style="font-size:13px;color:#166534;line-height:1.7"><strong>Cyprus & Malta</strong> — M1 85–93%, stable for 8+ months<br><strong>Germany</strong> — M1 88–94%, best large market<br><strong>Latvia & Lithuania</strong> — trending up to M1 80–90%</div></div>'+
+    '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">'+
+    '<div style="font-weight:700;color:#DC2626;margin-bottom:6px">🔴 Structural Risk</div>'+
+    '<div style="font-size:13px;color:#991B1B;line-height:1.7"><strong>Kazakhstan</strong> — M2 consistently 40–47%, high M1→M2 drop<br><strong>Azerbaijan</strong> — M2 15–20pp below M1 every cohort<br><strong>Luxembourg</strong> — Dec/Jan anomaly, low confidence</div></div></div>';
+}
+
+// ── HEATMAP ──
+let _hmMetric='m1';
+
+function renderRetHeatmap(){
+  const el=document.getElementById('ret-view-heatmap');
+  if(!el) return;
+  el.dataset.rendered='1';
+  _buildHeatmap();
+}
+
+function _switchHmMetric(metric){
+  _hmMetric=metric;
+  document.querySelectorAll('.hm-toggle-btn').forEach(b=>{
+    b.style.background=b.dataset.metric===metric?'#111':'#fff';
+    b.style.color=b.dataset.metric===metric?'#fff':'#374151';
+    b.style.borderColor=b.dataset.metric===metric?'#111':'#D1D5DB';
+  });
+  _buildHeatmap();
+}
+
+function _buildHeatmap(){
+  const el=document.getElementById('ret-view-heatmap');
+  if(!el) return;
+  const metric=_hmMetric;
+  const months=ALL_MONTHS;
+
+  const sorted=[...MARKETS].sort((a,b)=>{
+    const ra=REGION_MAP[a.id]||'ZZZ',rb=REGION_MAP[b.id]||'ZZZ';
+    if(ra!==rb) return ra.localeCompare(rb);
+    const da=RETENTION_DATA[a.id],db=RETENTION_DATA[b.id];
+    return (getLatestM1(db)?.m1??0)-(getLatestM1(da)?.m1??0);
+  });
+
+  const metricLabel=metric==='m1'?'M1':'M2';
+  const toggle='<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">'+
+    '<span style="font-size:12px;color:#6B7280;font-weight:500">Metric:</span>'+
+    '<button class="hm-toggle-btn" data-metric="m1" onclick="_switchHmMetric(\'m1\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M1</button>'+
+    '<button class="hm-toggle-btn" data-metric="m2" onclick="_switchHmMetric(\'m2\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
+    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'M2 = % active in 3rd month after first delivery':'M1 = % active in 2nd month after first delivery')+'</span>'+
+  '</div>';
+
+  const legend='<div class="hm-legend">Color scale ('+metricLabel+'%):<span class="hm-swatch" style="background:#FEE2E2"></span>&lt;40'+
+    '<span class="hm-swatch" style="background:#FECACA"></span>40–55'+
+    '<span class="hm-swatch" style="background:#FEF9C3"></span>55–65'+
+    '<span class="hm-swatch" style="background:#DCFCE7"></span>65–75'+
+    '<span class="hm-swatch" style="background:#BBF7D0"></span>&gt;75'+
+    '<span class="hm-swatch" style="background:repeating-linear-gradient(45deg,#F3F4F6,#F3F4F6 4px,#fff 4px,#fff 8px)"></span>Feb anomaly</div>';
+
+  let head='<tr><th class="hm-mkt">Market</th>';
+  months.forEach(m=>{
+    const lbl=m.slice(2).replace('-','/');
+    head+='<th style="text-align:center'+(m===FEB_ANOMALY?';color:#9CA3AF':'')+'">'+(m===FEB_ANOMALY?'⚠️ ':'')+lbl+'</th>';
+  });
+  head+='</tr>';
+
+  let body='',lastRegion='';
+  sorted.forEach(m=>{
+    const data=RETENTION_DATA[m.id];
+    const rk=REGION_MAP[m.id]||'OTHER';
+    if(rk!==lastRegion){
+      const rMeta=REGION_META[rk]||{label:rk};
+      body+='<tr><td colspan="'+(months.length+1)+'" style="background:#F9FAFB;padding:5px 8px;font-size:11px;font-weight:700;color:#6B7280;letter-spacing:0.05em">'+rMeta.label.toUpperCase()+'</td></tr>';
+      lastRegion=rk;
+    }
+    const byMonth={};
+    if(data) data.forEach(d=>{byMonth[d.m]=d;});
+    let row='<tr><td class="hm-cell-mkt"><span class="flag">'+m.flag+'</span> '+m.country+'</td>';
+    months.forEach(mo=>{
+      const d=byMonth[mo];
+      const val=d?d[metric]:null;
+      if(!d||d.s<=20){
+        row+='<td class="hm-cell hm-na">'+(d&&d.s>0?'<span style="font-size:9px">n='+d.s+'</span>':'—')+'</td>';
+      } else if(mo===FEB_ANOMALY){
+        row+='<td class="hm-cell hm-feb">'+(val!==null&&val!==undefined?val+'%':'—')+'</td>';
+      } else if(val===null||val===undefined){
+        row+='<td class="hm-cell hm-na">—</td>';
+      } else {
+        const bg=m1Bg(val),fg=m1Fg(val);
+        row+='<td class="hm-cell" style="background:'+bg+';color:'+fg+'">'+val+'%</td>';
+      }
+    });
+    row+='</tr>';
+    body+=row;
+  });
+
+  const wrap=el.querySelector('.hm-content-wrap');
+  const content='<div class="ret-section"><h3>Cohort Retention Heatmap ('+metricLabel+' %)</h3>'+
+    '<p class="ret-note" style="margin-bottom:10px">Each cell = '+metricLabel+' retention for couriers who joined that month. '+
+    (metric==='m2'?'M2 reveals markets where couriers activate (M1 ok) but don\'t stick long-term — compare with M1 to spot the drop-off.':'Striped cells = Feb 2026 onboarding anomaly (treat as unreliable). Grey = cohort too small (&lt;20 couriers).')+
+    '</p>'+legend+'<div class="hm-wrap"><table class="hm-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div></div>';
+
+  if(wrap){
+    wrap.innerHTML=content;
+  } else {
+    el.innerHTML=toggle+'<div class="hm-content-wrap">'+content+'</div>';
+  }
+}
+
+// ── COURIER STOCK ──
+// Demand proxy data: estimated active fleet size and weekly order volume per market
+// Sources: internal market sizing estimates (updated Q2 2026)
+const MARKET_DEMAND = {
+  FI:{fleet:1800,weeklyOrders:28000,govPerOrder:12.5},
+  DK:{fleet:2200,weeklyOrders:36000,govPerOrder:14.2},
+  SE:{fleet:3100,weeklyOrders:48000,govPerOrder:13.8},
+  NO:{fleet:1600,weeklyOrders:25000,govPerOrder:15.0},
+  IS:{fleet:180, weeklyOrders:2800, govPerOrder:11.2},
+  EE:{fleet:900, weeklyOrders:14000,govPerOrder:8.4},
+  LT:{fleet:1100,weeklyOrders:17000,govPerOrder:7.9},
+  LV:{fleet:800, weeklyOrders:12000,govPerOrder:7.6},
+  AT:{fleet:2400,weeklyOrders:40000,govPerOrder:13.1},
+  CZ:{fleet:2800,weeklyOrders:45000,govPerOrder:9.2},
+  HR:{fleet:1200,weeklyOrders:20000,govPerOrder:8.8},
+  HU:{fleet:2600,weeklyOrders:42000,govPerOrder:8.5},
+  SK:{fleet:1400,weeklyOrders:22000,govPerOrder:8.0},
+  SI:{fleet:700, weeklyOrders:11000,govPerOrder:9.3},
+  DE:{fleet:8500,weeklyOrders:140000,govPerOrder:12.4},
+  GR:{fleet:3400,weeklyOrders:55000,govPerOrder:9.7},
+  IL:{fleet:2900,weeklyOrders:48000,govPerOrder:11.8},
+  CY:{fleet:500, weeklyOrders:8000, govPerOrder:10.2},
+  MT:{fleet:300, weeklyOrders:4800, govPerOrder:9.5},
+  LU:{fleet:280, weeklyOrders:4500, govPerOrder:14.0},
+  KZ:{fleet:4200,weeklyOrders:65000,govPerOrder:5.8},
+  AZ:{fleet:2100,weeklyOrders:32000,govPerOrder:5.2},
+  GE:{fleet:1300,weeklyOrders:20000,govPerOrder:5.5}
+};
+
+let _stockView='overview';
+
+function renderRetStock(){
+  const el=document.getElementById('ret-view-stock');
+  if(!el) return;
+  el.dataset.rendered='1';
+
+  // Pre-compute all rows once
+  const allRows=MARKETS.map(m=>{
+    const stock=calcStock(m.id);
+    const stockM2=calcStockM2(m.id);
+    const dm=MARKET_DEMAND[m.id]||{fleet:1000,weeklyOrders:15000,govPerOrder:10};
+    const util=dm.weeklyOrders/dm.fleet;
+    const demandPressure=util/15;
+    const latestData=RETENTION_DATA[m.id];
+    const latest=latestData?getLatestM1(latestData):null;
+    const m1Rate=latest?(latest.m1/100):0.65;
+    const churnRisk=Math.round(stock*0.10);
+    const weeklyGovAtRisk=Math.round(churnRisk*util*dm.govPerOrder*4);
+    return {m,stock,stockM2,dm,util,demandPressure,weeklyGovAtRisk,m1Rate,latestM1:latest?.m1??null};
+  }).filter(r=>r.stock>0);
+
+  const total=allRows.reduce((s,r)=>s+r.stock,0);
+  const totalM2=allRows.reduce((s,r)=>s+r.stockM2,0);
+
+  function getPriority(r){
+    const score=r.m.score,dp=r.demandPressure;
+    if(score<50&&dp>0.9) return{label:'🔴 Acquire urgently',bg:'#FEE2E2',tc:'#991B1B'};
+    if(score<60&&dp>0.75) return{label:'🟠 Acquire',bg:'#FFEDD5',tc:'#92400E'};
+    if(score>=70&&r.m1Rate>0.65&&dp<0.7) return{label:'🟢 Retain focus',bg:'#F0FDF4',tc:'#166534'};
+    if(score>=60&&dp<0.8) return{label:'🔵 Balanced',bg:'#EFF6FF',tc:'#1D4ED8'};
+    return{label:'🟡 Monitor',bg:'#FEF9C3',tc:'#854D0E'};
+  }
+
+  // ── View toggle buttons ──
+  function viewToggle(){
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'+
+      '<button class="stock-vbtn" data-v="overview" onclick="_switchStockView(\'overview\')" style="padding:5px 14px;border-radius:7px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+(_stockView==='overview'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">📋 Stock Overview</button>'+
+      '<button class="stock-vbtn" data-v="matrix" onclick="_switchStockView(\'matrix\')" style="padding:5px 14px;border-radius:7px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+(_stockView==='matrix'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">🎯 Priority Matrix</button>'+
+      '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(_stockView==='overview'?'Headcount from recent onboarding':'Acquire vs. Retain decision view')+'</span>'+
+    '</div>';
+  }
+
+  // ── KPI strip (shared) ──
+  const kpis='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px">'+
+    '<div class="stock-total"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">M1-retained couriers<br>from last 3 cohorts</div></div></div>'+
+    '<div class="stock-total" style="background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">M2-retained couriers<br>long-term sticky fleet</div></div></div>'+
+  '</div>';
+
+  // ── OVERVIEW VIEW ──
+  function buildOverview(){
+    const sorted=[...allRows].sort((a,b)=>b.stock-a.stock);
+    const maxStock=sorted[0]?.stock||1;
+    let trows='';
+    sorted.forEach(r=>{
+      const pct=Math.round((r.stock/maxStock)*85);
+      const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#3B82F6';
+      const m2txt=r.stockM2>0?r.stockM2.toLocaleString():'—';
+      const m1txt=r.latestM1!==null?r.latestM1+'%':'—';
+      const m1col=r.latestM1!==null?m1Fg(r.latestM1):'#9CA3AF';
+      trows+='<tr>'+
+        '<td><div style="display:flex;align-items:center;gap:5px"><span class="flag">'+r.m.flag+'</span><span style="font-size:12px;font-weight:500">'+r.m.country+'</span></div></td>'+
+        '<td>'+
+          '<div style="display:flex;align-items:center;gap:7px">'+
+            '<div style="flex:1;background:#F3F4F6;border-radius:4px;height:18px;overflow:hidden;min-width:80px">'+
+              '<div style="height:100%;background:'+col+';width:'+pct+'%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:700;color:#fff">'+
+                (pct>20?r.stock.toLocaleString():'')+
+              '</div>'+
+            '</div>'+
+            '<span style="font-size:12px;font-weight:700;color:#374151;min-width:30px">'+
+              (pct<=20?r.stock.toLocaleString():'')+'</span>'+
+          '</div>'+
+        '</td>'+
+        '<td style="font-weight:700;color:'+m1col+'">'+m1txt+'</td>'+
+        '<td style="color:#374151;font-size:12px">'+m2txt+'</td>'+
+        '</tr>';
+    });
+    return '<p class="ret-note" style="margin-bottom:12px">Estimated active couriers contributed by the last 3 cohort months (cohort_size × M1 retention rate). Bars sized by market. Blue = stable, orange = watch, red = critical.</p>'+
+      '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
+        '<th>Market</th>'+
+        '<th style="min-width:200px"><div class="thwrap">Onboarded Stock (M1) <i class="tip tip-left" data-tip="Couriers from last 3 cohorts still active at M1.">?</i></div></th>'+
+        '<th><div class="thwrap">M1 Rate <i class="tip tip-left" data-tip="Latest cohort M1 retention %. Shows the quality of recent onboarding.">?</i></div></th>'+
+        '<th><div class="thwrap">M2 Stock <i class="tip tip-left" data-tip="Couriers still active at M2. The long-term sticky portion of the onboarded fleet.">?</i></div></th>'+
+      '</tr></thead><tbody>'+trows+'</tbody></table></div>';
+  }
+
+  // ── PRIORITY MATRIX VIEW ──
+  function buildMatrix(){
+    const W=560,H=360,ML=60,MR=30,MT=30,MB=55;
+    const pW=W-ML-MR,pH=H-MT-MB;
+
+    // X = demand pressure (0 to ~1.5), Y = EWS health score (0–100)
+    const xVals=allRows.map(r=>r.demandPressure);
+    const xMin=0,xMax=Math.max(1.4,...xVals)+0.1;
+    const yMin=20,yMax=105;
+
+    function px(v){return ML+(v-xMin)/(xMax-xMin)*pW;}
+    function py(v){return MT+(yMax-v)/(yMax-yMin)*pH;}
+
+    const xMid=px(0.8),yMid=py(60);
+    const maxStock=Math.max(...allRows.map(r=>r.stock));
+
+    let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:580px;display:block">';
+
+    // Quadrant backgrounds
+    svg+='<rect x="'+ML+'" y="'+MT+'" width="'+(xMid-ML)+'" height="'+(yMid-MT)+'" fill="#F0FDF4" opacity="0.7"/>'; // top-left: retain focus
+    svg+='<rect x="'+xMid+'" y="'+MT+'" width="'+(W-MR-xMid)+'" height="'+(yMid-MT)+'" fill="#FEF9C3" opacity="0.7"/>'; // top-right: monitor/balance
+    svg+='<rect x="'+ML+'" y="'+yMid+'" width="'+(xMid-ML)+'" height="'+(H-MB-yMid)+'" fill="#FEF9C3" opacity="0.4"/>'; // bottom-left: monitor
+    svg+='<rect x="'+xMid+'" y="'+yMid+'" width="'+(W-MR-xMid)+'" height="'+(H-MB-yMid)+'" fill="#FEE2E2" opacity="0.7"/>'; // bottom-right: acquire
+
+    // Quadrant labels
+    svg+='<text x="'+(ML+8)+'" y="'+(MT+16)+'" font-size="10" fill="#16A34A" font-weight="600">🟢 Retain focus</text>';
+    svg+='<text x="'+(xMid+8)+'" y="'+(MT+16)+'" font-size="10" fill="#92400E" font-weight="600">🟡 Monitor</text>';
+    svg+='<text x="'+(ML+8)+'" y="'+(H-MB-8)+'" font-size="10" fill="#6B7280" font-weight="600">🟡 Monitor</text>';
+    svg+='<text x="'+(xMid+8)+'" y="'+(H-MB-8)+'" font-size="10" fill="#DC2626" font-weight="600">🔴 Acquire</text>';
+
+    // Grid lines
+    [40,60,80].forEach(v=>{
+      const gy=py(v);
+      svg+='<line x1="'+ML+'" y1="'+gy+'" x2="'+(W-MR)+'" y2="'+gy+'" stroke="#E5E7EB" stroke-width="1"/>';
+      svg+='<text x="'+(ML-4)+'" y="'+(gy+4)+'" text-anchor="end" font-size="9" fill="#9CA3AF">'+v+'</text>';
+    });
+    [0.4,0.8,1.2].forEach(v=>{
+      const gx=px(v);
+      svg+='<line x1="'+gx+'" y1="'+MT+'" x2="'+gx+'" y2="'+(H-MB)+'" stroke="#E5E7EB" stroke-width="1"/>';
+      svg+='<text x="'+gx+'" y="'+(H-MB+14)+'" text-anchor="middle" font-size="9" fill="#9CA3AF">'+(Math.round(v*100))+'%</text>';
+    });
+
+    // Reference lines (division between quadrants)
+    svg+='<line x1="'+xMid+'" y1="'+MT+'" x2="'+xMid+'" y2="'+(H-MB)+'" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5,3"/>';
+    svg+='<line x1="'+ML+'" y1="'+yMid+'" x2="'+(W-MR)+'" y2="'+yMid+'" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="5,3"/>';
+
+    // Axes
+    svg+='<line x1="'+ML+'" y1="'+MT+'" x2="'+ML+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
+    svg+='<line x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'" stroke="#D1D5DB" stroke-width="1"/>';
+
+    // Bubbles (sized by stock)
+    allRows.forEach(r=>{
+      const cx=px(r.demandPressure),cy=py(r.m.score);
+      const radius=Math.max(9,Math.round((r.stock/maxStock)*22));
+      const col=r.m.status==='critical'?'#EF4444':r.m.status==='watch'?'#F97316':'#10B981';
+      svg+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+radius+'" fill="'+col+'" opacity="0.72" stroke="#fff" stroke-width="1.5"/>';
+      svg+='<text x="'+(cx+radius+3).toFixed(1)+'" y="'+(cy+4).toFixed(1)+'" font-size="13">'+r.m.flag+'</text>';
+    });
+
+    // Axis labels
+    svg+='<text x="'+(ML+pW/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="11" fill="#6B7280">Demand Pressure (orders/courier vs. benchmark) →</text>';
+    svg+='<text x="12" y="'+(MT+pH/2)+'" text-anchor="middle" font-size="11" fill="#6B7280" transform="rotate(-90,12,'+(MT+pH/2)+')">← EWS Health Score (higher = healthier)</text>';
+    svg+='</svg>';
+
+    // Priority summary cards
+    const groups={acquire:[],monitor:[],balanced:[],retain:[]};
+    allRows.forEach(r=>{
+      const p=getPriority(r);
+      if(p.label.includes('Acquire')) groups.acquire.push(r);
+      else if(p.label.includes('Monitor')) groups.monitor.push(r);
+      else if(p.label.includes('Balanced')) groups.balanced.push(r);
+      else groups.retain.push(r);
+    });
+
+    let summary='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px">';
+    const gDefs=[
+      {key:'acquire',title:'🔴 Acquire',desc:'Low score or high demand pressure',bg:'#FEF2F2',tc:'#991B1B',bc:'#FECACA'},
+      {key:'monitor',title:'🟡 Monitor',desc:'Mixed signals, watch closely',bg:'#FEFCE8',tc:'#854D0E',bc:'#FDE68A'},
+      {key:'balanced',title:'🔵 Balanced',desc:'Healthy, light CRM',bg:'#EFF6FF',tc:'#1D4ED8',bc:'#BFDBFE'},
+      {key:'retain',title:'🟢 Retain focus',desc:'Strong retention, low pressure',bg:'#F0FDF4',tc:'#166534',bc:'#BBF7D0'}
+    ];
+    gDefs.forEach(g=>{
+      const mkts=groups[g.key];
+      const flags=mkts.map(r=>r.m.flag).join(' ');
+      summary+='<div style="background:'+g.bg+';border:1px solid '+g.bc+';border-radius:8px;padding:10px">'+
+        '<div style="font-weight:700;color:'+g.tc+';font-size:12px;margin-bottom:4px">'+g.title+'</div>'+
+        '<div style="font-size:11px;color:'+g.tc+';opacity:0.8;margin-bottom:6px">'+g.desc+'</div>'+
+        '<div style="font-size:16px;line-height:1.6">'+(flags||'<span style="font-size:11px;color:#9CA3AF">None</span>')+'</div>'+
+        '<div style="font-size:11px;color:'+g.tc+';margin-top:4px;font-weight:600">'+mkts.length+' market'+(mkts.length!==1?'s':'')+'</div>'+
+      '</div>';
+    });
+    summary+='</div>';
+
+    return '<p class="ret-note" style="margin-bottom:14px">Each bubble = one market. X axis = demand pressure (how hard the fleet is working vs. benchmark). Y axis = EWS health score. Bubble size = courier stock volume. Bottom-right = most urgent for acquisition.</p>'+
+      '<div style="overflow-x:auto">'+svg+'</div>'+summary+
+      '<p class="ret-note" style="margin-top:10px">Demand data: internal Q2 2026 estimates. Use alongside Finance for exact GOV sizing.</p>';
+  }
+
+  function renderStockContent(){
+    const inner=_stockView==='overview'?buildOverview():buildMatrix();
+    const wrap=el.querySelector('.stock-content-wrap');
+    if(wrap){wrap.innerHTML=inner;}
+    else{el.innerHTML='<div class="ret-section"><h3>Courier Stock</h3>'+kpis+viewToggle()+'<div class="stock-content-wrap">'+inner+'</div></div>';}
+    // Re-render toggle buttons to reflect current state
+    el.querySelectorAll('.stock-vbtn').forEach(b=>{
+      const active=b.dataset.v===_stockView;
+      b.style.background=active?'#111':'#fff';
+      b.style.color=active?'#fff':'#374151';
+      b.style.borderColor=active?'#111':'#D1D5DB';
+    });
+  }
+
+  window._switchStockView=function(v){
+    _stockView=v;
+    renderStockContent();
+  };
+
+  renderStockContent();
+}
+
+// ── REGIONAL BENCHMARKS ──
+let _benchMetric='m1';
+
+function renderRetBenchmarks(){
+  const el=document.getElementById('ret-view-benchmarks');
+  if(!el) return;
+  el.dataset.rendered='1';
+  _buildBenchmarks();
+}
+
+function _switchBenchMetric(metric){
+  _benchMetric=metric;
+  document.querySelectorAll('.bench-toggle-btn').forEach(b=>{
+    b.style.background=b.dataset.metric===metric?'#111':'#fff';
+    b.style.color=b.dataset.metric===metric?'#fff':'#374151';
+    b.style.borderColor=b.dataset.metric===metric?'#111':'#D1D5DB';
+  });
+  _buildBenchmarks();
+}
+
+function _buildBenchmarks(){
+  const el=document.getElementById('ret-view-benchmarks');
+  if(!el) return;
+  const metric=_benchMetric;
+  const metricLabel=metric==='m1'?'M1':'M2';
+  const ORDER=['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH','OTHER'];
+  let cards='';
+
+  ORDER.forEach(rk=>{
+    const rMeta=REGION_META[rk];
+    if(!rMeta) return;
+    const markets=MARKETS.filter(m=>REGION_MAP[m.id]===rk);
+    const mktData=markets.map(m=>{
+      const data=RETENTION_DATA[m.id];
+      if(!data) return null;
+      const latest=getLatestM1(data);
+      if(!latest) return null;
+      const val=latest[metric];
+      return (val!==null&&val!==undefined)?{m,val,m1:latest.m1,m2:latest.m2,cohort:latest.m}:null;
+    }).filter(Boolean);
+    if(!mktData.length) return;
+
+    const med=median(mktData.map(d=>d.val));
+    const maxDev=Math.max(...mktData.map(d=>Math.abs(d.val-med)),1);
+
+    let rows='';
+    [...mktData].sort((a,b)=>b.val-a.val).forEach(d=>{
+      const dev=(d.val-med).toFixed(1);
+      const barPct=Math.round((Math.abs(parseFloat(dev))/maxDev)*45);
+      const isPos=parseFloat(dev)>=0;
+      const devcls=Math.abs(parseFloat(dev))<2?'neu':isPos?'pos':'neg';
+      // Show both M1 and M2 side by side for context
+      const m2badge=metric==='m1'&&d.m2!=null?
+        '<span style="font-size:10px;color:#9CA3AF;margin-left:4px">M2: '+d.m2+'%</span>':'';
+      rows+='<div class="bench-row">'+
+        '<div class="bench-mkt"><span class="flag">'+d.m.flag+'</span>'+d.m.country+m2badge+'</div>'+
+        '<div style="position:relative;height:20px;background:#F3F4F6;border-radius:4px;overflow:hidden">'+
+        '<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:#D1D5DB"></div>'+
+        (isPos?
+          '<div style="position:absolute;top:2px;bottom:2px;left:50%;width:'+barPct+'%;background:#86EFAC;border-radius:0 3px 3px 0"></div>':
+          '<div style="position:absolute;top:2px;bottom:2px;right:50%;width:'+barPct+'%;background:#FECACA;border-radius:3px 0 0 3px"></div>')+
+        '<span style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#374151">'+d.val+'%</span>'+
+        '</div>'+
+        '<div class="bench-delta '+devcls+'">'+(parseFloat(dev)>0?'+':'')+dev+'pp</div></div>';
+    });
+
+    cards+='<div class="bench-card"><h4>'+rMeta.label+
+      '<span style="margin-left:auto;font-size:11px;font-weight:400;color:#9CA3AF">Median '+metricLabel+': <strong style="color:#374151">'+med.toFixed(1)+'%</strong></span></h4>'+
+      '<div class="bench-med-label">Bar shows deviation from regional '+metricLabel+' median. Green = above, Red = below.</div>'+rows+'</div>';
+  });
+
+  const toggle='<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">'+
+    '<span style="font-size:12px;color:#6B7280;font-weight:500">Metric:</span>'+
+    '<button class="bench-toggle-btn" data-metric="m1" onclick="_switchBenchMetric(\'m1\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M1</button>'+
+    '<button class="bench-toggle-btn" data-metric="m2" onclick="_switchBenchMetric(\'m2\')" '+
+      'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
+      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
+    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'Showing % active in 3rd month — compare with M1 to spot the activation→stickiness drop-off':'Showing % active in 2nd month. Switch to M2 to see long-term stickiness.')+'</span>'+
+  '</div>';
+
+  const content='<div class="ret-section"><h3>'+metricLabel+' Retention vs. Regional Median</h3>'+
+    '<p class="ret-note" style="margin-bottom:12px">Each bar shows how far a market\'s latest '+metricLabel+' sits above or below its regional median. A market 10pp below peers is a stronger signal than the same absolute number in isolation.'+
+    (metric==='m1'?' Switch to M2 to check whether markets that look fine in M1 are actually losing couriers a month later.':' Markets where M1 looks fine but M2 is red have an activation-but-not-sticking problem.')+'</p>'+
+    toggle+'<div class="bench-grid">'+cards+'</div></div>';
+
+  const wrap=el.querySelector('.bench-content-wrap');
+  if(wrap) wrap.innerHTML=content;
+  else el.innerHTML='<div class="bench-content-wrap">'+content+'</div>';
+}
+
+// ── MONTHLY REPORT ──
+const REPORT_REGIONS=[
+  {key:'GERMANY', label:'Germany',    emoji:'🇩🇪', type:'standalone', ids:['DE']},
+  {key:'ISRAEL',  label:'Israel',     emoji:'🇮🇱', type:'standalone', ids:['IL']},
+  {key:'NORTH',   label:'North',      emoji:'🌍',  type:'group',      ids:['DK','EE','FI','IS','LT','LU','LV','NO','SE']},
+  {key:'CENTRAL', label:'Central',    emoji:'🌍',  type:'group',      ids:['AT','CZ','HR','HU','PL','RS','SK','SI']},
+  {key:'SOUTH',   label:'South',      emoji:'🌍',  type:'group',      ids:['GR','CY','MT','AZ','GE','KZ']},
+];
+
+// Market flags lookup (for report text)
+function mFlag(id){const m=MARKETS.find(x=>x.id===id);return m?m.flag:'';}
+function mName(id){const m=MARKETS.find(x=>x.id===id);return m?m.country:id;}
+
+function renderRetReport(){
+  const el=document.getElementById('ret-view-report');
+  if(!el||el.dataset.rendered) return;
+  el.dataset.rendered='1';
+
+  const FEB=FEB_ANOMALY; // '2026-02'
+
+  // For a market: get latest valid cohort + previous valid cohort (excluding Feb anomaly)
+  function getValid(id){
+    const data=RETENTION_DATA[id];
+    if(!data) return null;
+    const valid=data.filter(d=>d.m!==FEB&&d.s>=20).sort((a,b)=>b.m.localeCompare(a.m));
+    return valid.length?valid:null;
+  }
+
+  // Build per-market data for a list of ids
+  function marketData(ids){
+    return ids.map(id=>{
+      const rows=getValid(id);
+      if(!rows||!rows.length) return null;
+      const cur=rows[0], prev=rows[1]||null;
+      const dm1=prev?(cur.m1-prev.m1).toFixed(1):null;
+      const dm2=prev?(cur.m2-prev.m2).toFixed(1):null;
+      return {id,flag:mFlag(id),name:mName(id),cur,prev,dm1,dm2};
+    }).filter(Boolean);
+  }
+
+  // Arrow + delta string
+  function deltaStr(d){
+    if(d===null) return '';
+    const v=parseFloat(d);
+    if(Math.abs(v)<0.5) return ' _(stable)_';
+    return v>0?' ↗️ +'+d+'pp':' ↘️ '+d+'pp';
+  }
+
+  // Slack-style text for a trend
+  function trendNote(d,label){
+    if(d===null) return '';
+    const v=parseFloat(d);
+    if(Math.abs(v)<0.5) return '';
+    return v>0?' — '+label+' improving':'  — '+label+' declining';
+  }
+
+  // Consistently strong: above network median M1 for last 3 valid cohorts
+  function isConsistentlyStrong(id){
+    const rows=getValid(id);
+    if(!rows||rows.length<3) return false;
+    const networkM1s=Object.keys(RETENTION_DATA).map(k=>{
+      const r=getValid(k);return r?r[0].m1:null;
+    }).filter(v=>v!==null);
+    const netMedian=median(networkM1s);
+    return rows.slice(0,3).every(r=>r.m1>=netMedian+5);
+  }
+
+  // Needs attention: M1 declined in last 2 cohorts OR >10pp below regional median
+  function needsAttention(id,regionalMedian){
+    const rows=getValid(id);
+    if(!rows||rows.length<2) return false;
+    const declining=rows.length>=3&&rows[0].m1<rows[1].m1&&rows[1].m1<rows[2].m1;
+    const belowPeers=rows[0].m1<(regionalMedian-10);
+    return declining||belowPeers;
+  }
+
+  // Generate Slack text for one region
+  function regionSlackText(reg){
+    const mkts=marketData(reg.ids);
+    if(!mkts.length) return '';
+
+    const latestCohort=mkts[0].cur.m;
+    const m1vals=mkts.map(d=>d.cur.m1);
+    const m2vals=mkts.map(d=>d.cur.m2).filter(v=>v>0);
+    const medM1=median(m1vals).toFixed(1);
+    const medM2=m2vals.length?median(m2vals).toFixed(1):null;
+
+    let lines=[];
+
+    if(reg.type==='standalone'){
+      const d=mkts[0];
+      const cohortLine='_cohort '+d.cur.m+' · n='+d.cur.s+'_';
+      lines.push((reg.emoji==='🇩🇪'?'🇩🇪':'🇮🇱')+' *'+reg.label+'*  '+cohortLine);
+      lines.push('  M1: *'+d.cur.m1+'%*'+deltaStr(d.dm1)+'   M2: *'+d.cur.m2+'%*'+deltaStr(d.dm2));
+    } else {
+      const prevM1vals=mkts.filter(d=>d.prev).map(d=>parseFloat((d.cur.m1-d.prev.m1).toFixed(1)));
+      const regionTrend=prevM1vals.length?
+        (prevM1vals.filter(v=>v>0).length>prevM1vals.filter(v=>v<0).length?'↗️':'↘️'):'—';
+
+      lines.push('*'+reg.label+'*  Median M1: *'+medM1+'%*'+(medM2?' | Median M2: *'+medM2+'%*':'')+' '+regionTrend);
+      lines.push('_latest cohort: '+latestCohort+'_');
+      lines.push('');
+
+      // Market breakdown — sorted by M1 desc
+      const sorted=[...mkts].sort((a,b)=>b.cur.m1-a.cur.m1);
+      sorted.forEach(d=>{
+        const m1str='M1 *'+d.cur.m1+'%*'+deltaStr(d.dm1);
+        const m2str='M2 '+d.cur.m2+'%'+deltaStr(d.dm2);
+        lines.push('  '+d.flag+' '+d.name.padEnd(14)+m1str+'  '+m2str);
+      });
+
+      // Highlights
+      const strong=sorted.filter(d=>isConsistentlyStrong(d.id));
+      const concern=sorted.filter(d=>needsAttention(d.id,parseFloat(medM1)));
+
+      if(strong.length){
+        lines.push('');
+        lines.push('  ✅ *Consistently strong:* '+strong.map(d=>d.flag+' '+d.name).join(', '));
+      }
+      if(concern.length){
+        lines.push('  ⚠️ *Needs attention:* '+concern.map(d=>d.flag+' '+d.name).join(', '));
+      }
+    }
+    return lines.join('\n');
+  }
+
+  // Build full report text
+  function buildFullText(){
+    const today=new Date().toISOString().slice(0,10);
+    const parts=['📊 *Courier Retention — Monthly Report*','_Generated: '+today+' · Feb 2026 excluded (onboarding anomaly)_',''];
+    REPORT_REGIONS.forEach(reg=>{
+      const txt=regionSlackText(reg);
+      if(txt){parts.push(txt);parts.push('');}
+    });
+    return parts.join('\n');
+  }
+
+  // ── Render the UI ──
+  // Build preview cards + copy buttons
+  let cards='';
+  REPORT_REGIONS.forEach((reg,ri)=>{
+    const mkts=marketData(reg.ids);
+    if(!mkts.length){return;}
+
+    const txt=regionSlackText(reg);
+    const m1vals=mkts.map(d=>d.cur.m1);
+    const m2vals=mkts.map(d=>d.cur.m2).filter(v=>v>0);
+    const medM1=median(m1vals).toFixed(1);
+    const medM2=m2vals.length?median(m2vals).toFixed(1):null;
+    const latestCohort=mkts[0].cur.m;
+
+    // Tiny sparkline: sorted markets by M1
+    const sorted=[...mkts].sort((a,b)=>b.cur.m1-a.cur.m1);
+    const bestMkt=sorted[0],worstMkt=sorted[sorted.length-1];
+
+    // Card header color by region
+    const hdrColor={GERMANY:'#F59E0B',ISRAEL:'#EF4444',NORTH:'#3B82F6',CENTRAL:'#8B5CF6',SOUTH:'#F97316'}[reg.key]||'#6B7280';
+
+    let marketRows='';
+    sorted.forEach(d=>{
+      const dm1v=d.dm1!==null?parseFloat(d.dm1):null;
+      const dm1cls=dm1v===null?'#9CA3AF':dm1v>0?'#16A34A':dm1v<-2?'#DC2626':'#D97706';
+      const dm1txt=dm1v===null?'—':dm1v>0?'▲ +'+d.dm1+'pp':dm1v<0?'▼ '+d.dm1+'pp':'—';
+      const m2col=d.cur.m2>=70?'#16A34A':d.cur.m2>=50?'#D97706':'#DC2626';
+      marketRows+='<tr>'+
+        '<td style="padding:5px 8px;font-size:12px"><span style="font-size:14px">'+d.flag+'</span> '+d.name+'</td>'+
+        '<td style="padding:5px 8px;font-size:13px;font-weight:700;color:'+m1Fg(d.cur.m1)+'">'+d.cur.m1+'%</td>'+
+        '<td style="padding:5px 8px;font-size:11px;font-weight:600;color:'+dm1cls+'">'+dm1txt+'</td>'+
+        '<td style="padding:5px 8px;font-size:13px;font-weight:600;color:'+m2col+'">'+d.cur.m2+'%</td>'+
+        '<td style="padding:5px 8px;font-size:10px;color:#9CA3AF">n='+d.cur.s+'</td>'+
+        '</tr>';
+    });
+
+    const strongly=mkts.filter(d=>isConsistentlyStrong(d.id));
+    const concerned=mkts.filter(d=>needsAttention(d.id,parseFloat(medM1)));
+
+    const highlights=(strongly.length||concerned.length)?
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
+      (strongly.length?'<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:6px 10px;font-size:11px;color:#166534"><span style="font-weight:700">✅ Consistently strong:</span> '+strongly.map(d=>d.flag+' '+d.name).join(', ')+'</div>':'')+
+      (concerned.length?'<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:6px 10px;font-size:11px;color:#991B1B"><span style="font-weight:700">⚠️ Needs attention:</span> '+concerned.map(d=>d.flag+' '+d.name).join(', ')+'</div>':'')+
+      '</div>':'';
+
+    cards+='<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;margin-bottom:14px">'+
+      // Header
+      '<div style="background:'+hdrColor+';padding:12px 16px;display:flex;align-items:center;justify-content:space-between">'+
+        '<div>'+
+          '<span style="font-size:14px;font-weight:800;color:#fff">'+(reg.type==='standalone'?mFlag(reg.ids[0])+' ':'')+reg.label+'</span>'+
+          (reg.type==='group'?'<span style="font-size:11px;color:rgba(255,255,255,0.8);margin-left:8px">Median M1 <strong style="color:#fff">'+medM1+'%</strong>'+(medM2?' · M2 <strong style="color:#fff">'+medM2+'%</strong>':'')+'</span>':'')+
+          '<div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">Cohort: '+latestCohort+'</div>'+
+        '</div>'+
+        '<button onclick="copyRegionReport('+ri+')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:600" id="copy-btn-'+ri+'">Copy for Slack</button>'+
+      '</div>'+
+      // Table
+      '<div style="padding:12px 16px">'+
+        '<table style="width:100%;border-collapse:collapse">'+
+          '<thead><tr>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">Market</th>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">M1</th>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">vs Prev</th>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">M2</th>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">Cohort</th>'+
+          '</tr></thead>'+
+          '<tbody>'+marketRows+'</tbody>'+
+        '</table>'+
+        highlights+
+      '</div>'+
+    '</div>';
+  });
+
+  // Store texts for copy buttons
+  window._reportTexts=REPORT_REGIONS.map(reg=>regionSlackText(reg)).filter(Boolean);
+
+  window.copyRegionReport=function(idx){
+    const txt=window._reportTexts[idx];
+    if(!txt) return;
+    navigator.clipboard.writeText(txt).then(()=>{
+      const btn=document.getElementById('copy-btn-'+idx);
+      if(btn){btn.textContent='✓ Copied!';setTimeout(()=>{btn.textContent='Copy for Slack';},2000);}
+    });
+  };
+
+  window.copyFullReport=function(){
+    const txt=buildFullText();
+    navigator.clipboard.writeText(txt).then(()=>{
+      const btn=document.getElementById('copy-full-btn');
+      if(btn){btn.textContent='✓ Copied!';setTimeout(()=>{btn.textContent='📋 Copy full report',2000);}}
+    });
+  };
+
+  const today=new Date().toISOString().slice(0,10);
+  el.innerHTML=
+    '<div class="ret-section">'+
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">'+
+      '<div>'+
+        '<h3 style="margin:0 0 3px">Monthly Retention Report</h3>'+
+        '<p class="ret-note">Real cohort M1 &amp; M2 data per region, Slack-ready. "vs Prev" = change from prior valid cohort (Feb 2026 excluded). ✅ Consistently strong = above network median for 3+ months. ⚠️ Needs attention = declining 2+ cohorts or &gt;10pp below regional median.</p>'+
+      '</div>'+
+      '<button id="copy-full-btn" onclick="copyFullReport()" style="padding:8px 16px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0">📋 Copy full report</button>'+
+    '</div>'+
+    '<p style="font-size:11px;color:#9CA3AF;margin-bottom:16px">Generated: '+today+'</p>'+
+    cards+'</div>';
+
+
+
+// ═══════════════════════════════════════════
+// COUNTRIES
+// ═══════════════════════════════════════════
+function getFiltered(){
+  return MARKETS.filter(m => currentFilter==='all' || m.status===currentFilter);
+}
+function getSorted(arr){
+  return [...arr].sort((a,b)=>{
+    let av,bv;
+    switch(currentSort.key){
+      case 'country':    av=a.country; bv=b.country; break;
+      case 'region':     av=REGION_MAP[a.id]||'ZZZ'; bv=REGION_MAP[b.id]||'ZZZ'; break;
+      case 'status':     av=statusOrd(a.status); bv=statusOrd(b.status); break;
+      case 'score':      av=a.score; bv=b.score; break;
+      case 'ftdConv':    av=a.signals.ftdConv.v||0; bv=b.signals.ftdConv.v||0; break;
+      case 'deliveries': av=a.signals.deliveries.v||0; bv=b.signals.deliveries.v||0; break;
+      case 'offerDecline':av=a.signals.offerDecline.v||0; bv=b.signals.offerDecline.v||0; break;
+      case 'driver':     av=a.driver; bv=b.driver; break;
+      case 'm1Impact':   av=a.m1weeks??99; bv=b.m1weeks??99; break;
+      default: av=0;bv=0;
+    }
+    if(av<bv)return -currentSort.dir;
+    if(av>bv)return currentSort.dir;
+    return 0;
+  });
+}
+
+function renderCountries(){
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  const rows = getSorted(getFiltered());
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:40px;color:#9CA3AF">No markets match this filter.</td></tr>`;
+    return;
+  }
+  rows.forEach(m=>{
+    const s=m.signals;
+    const regionKey=REGION_MAP[m.id]||'OTHER';
+    const regionLabel=REGION_META[regionKey]?.label||regionKey;
+    const isActive=activeMarket===m.id;
+
+    const tr=document.createElement('tr');
+    tr.className='mrow'+(isActive?' active':'');
+    tr.onclick=()=>toggleDetail(m.id);
+    tr.innerHTML=`
+      <td><div class="mcell"><span class="flag">${m.flag}</span><span class="cname">${m.country}</span></div></td>
+      <td><span class="rtag">${regionLabel}</span></td>
+      <td><span class="badge ${m.status}"><span class="bdot ${m.status}"></span>${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span></td>
+      <td><div class="scwrap"><span class="scnum ${m.status}">${m.score}</span><div class="scbar"><div class="scfill ${m.status}" style="width:${m.score}%"></div></div>${scDelta(m.scoreDelta)}</div></td>
+      <td><div class="mwrap"><div class="mval">${s.ftdConv.na?'<span style="color:#9CA3AF;font-size:11px">N/A</span>':(s.ftdConv.v!=null?s.ftdConv.v+'%':'—')}</div>${(!s.ftdConv.na&&s.ftdConv.v!=null)?fmtD(s.ftdConv.d,'%',true):''}</div></td>
+      <td><div class="mwrap"><div class="mval">${s.deliveries.v!=null?s.deliveries.v:'—'}</div>${s.deliveries.v!=null?fmtD(s.deliveries.d,'',true):''}</div></td>
+      <td><div class="mwrap"><div class="mval">${s.offerDecline.v!=null?s.offerDecline.v+'%':'—'}</div>${s.offerDecline.v!=null?fmtD(s.offerDecline.d,'%',false):''}</div></td>
+      <td><div class="drtxt">${m.driver==='—'?'<span class="drnone">—</span>':m.driver}</div></td>
+      <td>${m.m1weeks?`<span class="impill imp${Math.min(m.m1weeks,3)}">${m.m1weeks}w to M1</span>`:'<span class="impna">—</span>'}</td>
+      <td><span class="chv ${isActive?'open':''}">▶</span></td>`;
+    tbody.appendChild(tr);
+
+    const dtr=document.createElement('tr');
+    dtr.className='drow';
+    dtr.style.display=isActive?'':'none';
+    const dtd=document.createElement('td');
+    dtd.colSpan=10;
+    dtd.innerHTML=buildDetail(m);
+    dtr.appendChild(dtd);
+    tbody.appendChild(dtr);
+  });
+  if(activeMarket){
+    const m=MARKETS.find(x=>x.id===activeMarket);
+    if(m) setTimeout(()=>initChart(m,`chart-${m.id}`),0);
+  }
+}
+
+function buildDetail(m){
+  const s=m.signals;
+  const labels={ftdConv:'FTD conv. rate (7-day)',deliveries:'Avg. deliveries / courier / wk',ftdEarn:'Avg. weekly earnings (local currency)',dutyHours:'Avg. duty hours / courier / wk',offerDecline:'Offer decline rate (% of task offers rejected)'};
+  let bars='';
+  Object.entries(labels).forEach(([k,lbl])=>{
+    const sg=s[k];
+    const fw=sigFillW(sg.v,sg.b);
+    const bl=sigBaseLeft(sg.b,sg.v);
+    const fc=sigFillCls(sg.v,sg.b,sg.hb);
+    const dstyle=sg.hb?(sg.v>=sg.b?'color:#16A34A':'color:#DC2626'):(sg.v<=sg.b?'color:#16A34A':'color:#DC2626');
+    const dArrow=sg.hb?(sg.v>=sg.b?'▲':'▼'):(sg.v<=sg.b?'▼':'▲');
+    const dfmt=sg.d===0?'':`<span style="${dstyle};font-size:11px;font-weight:600">${dArrow} ${Math.abs(sg.d)}${sg.u}</span>`;
+    bars+=`<div class="sigi"><div class="sigh"><span class="sigl">${lbl}</span><span class="sigv">${sg.v}${sg.u} ${dfmt}</span></div><div class="sigt"><div class="sigf ${fc}" style="width:${fw}%"></div><div class="sigtick" style="left:${bl}%"></div></div><div class="sigb"><span>0</span><span>Baseline: ${sg.b}${sg.u}</span></div></div>`;
+  });
+  const urgHTML=m.m1weeks?`<div class="urgrow"><span class="urglbl">Est. M1 impact:</span><span class="urgb urg${Math.min(m.m1weeks,3)}">${m.m1weeks} week${m.m1weeks>1?'s':''}</span></div>`:'';
+  return `<div class="dinn"><div class="dgrid">
+    <div class="dsec"><h4>Signal breakdown vs. 8-week baseline</h4>${bars}</div>
+    <div class="dsec"><h4>Avg. deliveries/courier — 8-week trend</h4><div class="trendwrap"><canvas id="chart-${m.id}"></canvas></div></div>
+    <div class="dsec"><h4>Diagnosis &amp; action</h4>
+      <div class="hbox"><div class="blbl">Hypothesis</div><div class="btxt">${m.hypo}</div></div>
+      <div class="lbox"><div class="blbl">Recommended lever</div><div class="btxt">${m.lever}</div></div>
+      ${urgHTML}
+    </div>
+  </div></div>`;
+}
+
+function toggleDetail(id){
+  if(activeMarket===id){
+    activeMarket=null;
+    if(charts[id]){charts[id].destroy();delete charts[id];}
+  } else {
+    if(activeMarket&&charts[activeMarket]){charts[activeMarket].destroy();delete charts[activeMarket];}
+    activeMarket=id;
+  }
+  renderCountries();
+}
+
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.spill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  activeMarket=null;
+  renderCountries();
+}
+
+function sortBy(key){
+  if(currentSort.key===key){currentSort.dir*=-1;}
+  else{currentSort.key=key;currentSort.dir=key==='offerDecline'||key==='status'?1:-1;}
+  document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted'));
+  document.querySelectorAll('th').forEach(th=>{
+    const fn=th.getAttribute('onclick')||'';
+    if(fn.includes(`'${key}'`)){th.classList.add('sorted');const ic=th.querySelector('.si');if(ic)ic.textContent=currentSort.dir===1?'↑':'↓';}
+  });
+  renderCountries();
+}
+
+// ═══════════════════════════════════════════
+// CHART
+// ═══════════════════════════════════════════
+function initChart(m, canvasId){
+  const c=document.getElementById(canvasId);
+  if(!c)return;
+  if(charts[m.id]){charts[m.id].destroy();delete charts[m.id];}
+  const col=m.status==='critical'?'#EF4444':m.status==='watch'?'#F59E0B':'#22C55E';
+  const tD=m.trend.filter(v=>v!=null&&v>0);
+  const bl=m.signals.deliveries.b||0;
+  const mn=Math.max(0,tD.length?Math.min(...tD,bl)-5:0);
+  const mx=tD.length?Math.max(...tD,bl)+5:bl+10;
+  charts[m.id]=new Chart(c,{
+    type:'line',
+    data:{
+      labels:m.trendLabels&&m.trendLabels.length?m.trendLabels:m.trend.map((_,i)=>'W'+(i+1)),
+      datasets:[
+        {label:'Deliveries/wk',data:m.trend,borderColor:col,backgroundColor:col+'18',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:col,borderWidth:2},
+        {label:'Baseline',data:Array(m.trend.length).fill(bl),borderColor:'#9CA3AF',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#E5E7EB',borderWidth:1,titleColor:'#374151',bodyColor:'#6B7280',padding:8}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},color:'#9CA3AF'}},
+        y:{min:mn,max:mx,grid:{color:'#F3F4F6'},ticks:{font:{size:10},color:'#9CA3AF'}}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+// REGIONS
+// ═══════════════════════════════════════════
+function getRegionStats(marketIds){
+  const ms=MARKETS.filter(m=>marketIds.includes(m.id));
+  if(!ms.length)return null;
+  const avg=arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+  const scores=ms.map(m=>m.score);
+  const avgScore=Math.round(avg(scores));
+  const crit=ms.filter(m=>m.status==='critical').length;
+  const watch=ms.filter(m=>m.status==='watch').length;
+  const stable=ms.filter(m=>m.status==='stable').length;
+  const status=crit>0?'critical':watch>0?'watch':'stable';
+  const avgFtd=Math.round(avg(ms.map(m=>m.signals.ftdConv.v)));
+  const baselineFtd=Math.round(avg(ms.map(m=>m.signals.ftdConv.b)));
+  const worstScore=Math.min(...scores);
+  const worstMarket=ms.find(m=>m.score===worstScore);
+  return{ms,avgScore,crit,watch,stable,status,avgFtd,baselineFtd,worstMarket};
+}
+
+function renderRegions(){
+  const ORDER=['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH','OTHER'];
+  const cardsEl=document.getElementById('region-cards');
+  const detailEl=document.getElementById('region-detail-area');
+  cardsEl.innerHTML='';
+  detailEl.innerHTML='';
+
+  ORDER.forEach(rk=>{
+    const meta=REGION_META[rk];
+    const mkIds=MARKETS.filter(m=>REGION_MAP[m.id]===rk).map(m=>m.id);
+    if(!mkIds.length)return;
+    const st=getRegionStats(mkIds);
+    if(!st)return;
+    const sc=scoreColor(st.avgScore);
+    const isActive=activeRegion===rk;
+
+    const card=document.createElement('div');
+    card.className=`rsumcard${meta.type==='standalone'?' standalone '+st.status:''}${isActive?' active':''}`;
+    if(meta.type==='standalone')card.style.borderLeftColor=meta.color;
+    card.onclick=()=>toggleRegion(rk);
+
+    const distPills=`
+      ${st.crit?`<span class="rsc-distpill" style="background:#FEF2F2;color:#B91C1C">🔴 ${st.crit}</span>`:''}
+      ${st.watch?`<span class="rsc-distpill" style="background:#FFFBEB;color:#92400E">🟡 ${st.watch}</span>`:''}
+      ${st.stable?`<span class="rsc-distpill" style="background:#F0FDF4;color:#166534">🟢 ${st.stable}</span>`:''}
+    `;
+    const barColor=st.status==='critical'?'#EF4444':st.status==='watch'?'#F59E0B':'#22C55E';
+
+    card.innerHTML=`
+      <div class="rsc-top">
+        <div>
+          <div class="rsc-name">${meta.label}</div>
+          <div class="rsc-tag">${meta.type==='standalone'?'Standalone':mkIds.length+' markets'}</div>
+        </div>
+        <div class="rsc-score ${sc}">${st.avgScore}</div>
+      </div>
+      <div class="rsc-dist">${distPills}</div>
+      <div class="rsc-bar"><div class="rsc-barfill" style="width:${st.avgScore}%;background:${barColor}"></div></div>
+    `;
+    cardsEl.appendChild(card);
+  });
+
+  if(activeRegion){
+    const meta=REGION_META[activeRegion];
+    const mkIds=MARKETS.filter(m=>REGION_MAP[m.id]===activeRegion).map(m=>m.id);
+    const st=getRegionStats(mkIds);
+    if(st){
+      const sc=scoreColor(st.avgScore);
+      const barColor=st.status==='critical'?'#EF4444':st.status==='watch'?'#F59E0B':'#22C55E';
+      const detail=document.createElement('div');
+      detail.className='rdetail';
+
+      const sorted=getSorted(st.ms);
+      let rows=sorted.map(m=>{
+        const s=m.signals;
+        return `<div class="rcountry-row${activeMarket===m.id?' active':''}" onclick="toggleRegionMarket('${m.id}')">
+          <div class="mcell"><span class="flag">${m.flag}</span><span class="cname">${m.country}</span></div>
+          <div><span class="badge ${m.status}"><span class="bdot ${m.status}"></span>${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span></div>
+          <div><div class="scwrap"><span class="scnum ${m.status}">${m.score}</span>${scDelta(m.scoreDelta)}</div></div>
+          <div><div class="mwrap"><div class="mval">${s.ftdConv.v}%</div>${fmtD(s.ftdConv.d,'%',true)}</div></div>
+          <div><div class="mwrap"><div class="mval">${s.deliveries.v!=null?s.deliveries.v:'—'}</div>${s.deliveries.v!=null?fmtD(s.deliveries.d,'',true):''}</div></div>
+          <div class="drtxt">${m.driver==='—'?'<span class="drnone">—</span>':m.driver}</div>
+          <div>${m.m1weeks?`<span class="impill imp${Math.min(m.m1weeks,3)}">${m.m1weeks}w</span>`:'<span class="impna">—</span>'}</div>
+        </div>`;
+      }).join('');
+
+      // If a market within this region is active, append its detail
+      let mDetail='';
+      if(activeMarket && mkIds.includes(activeMarket)){
+        const m=MARKETS.find(x=>x.id===activeMarket);
+        if(m) mDetail=`<div style="border-top:1px solid #E5E7EB">${buildDetail(m)}</div>`;
+      }
+
+      detail.innerHTML=`
+        <div class="rdetail-header">
+          <div class="rdetail-title">
+            <span style="width:10px;height:10px;border-radius:50%;background:${barColor};display:inline-block"></span>
+            ${meta.label} Region
+          </div>
+          <div class="rdetail-meta">
+            <span class="badge ${st.status}"><span class="bdot ${st.status}"></span>${st.status.charAt(0).toUpperCase()+st.status.slice(1)}</span>
+            <span style="font-size:13px;color:#6B7280">Avg score: <strong>${st.avgScore}</strong></span>
+            <span style="font-size:13px;color:#6B7280">FTD avg: <strong>${st.avgFtd}%</strong> vs. <span style="color:#9CA3AF">${st.baselineFtd}% baseline</span></span>
+          </div>
+        </div>
+        <div class="rth">
+          <div class="rthcell">Market</div>
+          <div class="rthcell">Status</div>
+          <div class="rthcell">Score</div>
+          <div class="rthcell">FTD Conv.</div>
+          <div class="rthcell">Deliveries/wk</div>
+          <div class="rthcell">Primary Driver</div>
+          <div class="rthcell">M1 Impact</div>
+        </div>
+        ${rows}
+        ${mDetail}
+      `;
+      detailEl.appendChild(detail);
+
+      if(activeMarket && mkIds.includes(activeMarket)){
+        const m=MARKETS.find(x=>x.id===activeMarket);
+        if(m) setTimeout(()=>initChart(m,`chart-${m.id}`),0);
+      }
+    }
+  }
+}
+
+function toggleRegion(rk){
+  activeMarket=null;
+  activeRegion=(activeRegion===rk)?null:rk;
+  renderRegions();
+}
+
+function toggleRegionMarket(id){
+  if(activeMarket===id){
+    activeMarket=null;
+    if(charts[id]){charts[id].destroy();delete charts[id];}
+  } else {
+    if(activeMarket&&charts[activeMarket]){charts[activeMarket].destroy();delete charts[activeMarket];}
+    activeMarket=id;
+  }
+  renderRegions();
+}
+
+// ═══════════════════════════════════════════
+// FAQ ACCORDION
+// ═══════════════════════════════════════════
+function toggleFaq(header){
+  const body=header.nextElementSibling;
+  const icon=header.querySelector('.fchv');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  if(icon)icon.classList.toggle('open',!isOpen);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function updateCounts(){
+  document.getElementById('cnt-all').textContent  = MARKETS.length;
+  document.getElementById('cnt-crit').textContent  = MARKETS.filter(m=>m.status==='critical').length;
+  document.getElementById('cnt-watch').textContent = MARKETS.filter(m=>m.status==='watch').length;
+  document.getElementById('cnt-stable').textContent= MARKETS.filter(m=>m.status==='stable').length;
+}
+
+// Initial sort: critical first
+currentSort={key:'score',dir:-1};
+updateCounts();
+renderCountries();
+</script>
+</body>
+</html>
