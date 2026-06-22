@@ -959,7 +959,7 @@ function switchRetView(name,el){
   if(pnl){
     pnl.classList.add('active');
     const fn={overview:renderRetOverview,heatmap:renderRetHeatmap,stock:renderRetStock,
-              benchmarks:renderRetBenchmarks,interventions:renderRetInterventions};
+              benchmarks:renderRetBenchmarks};
     if(fn[name]&&!pnl.dataset.rendered) fn[name]();
   }
 }
@@ -976,13 +976,12 @@ function renderRetention(){
     '<button class="ret-snbtn" onclick="switchRetView(\'heatmap\',this)">🔥 Cohort Heatmap</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'stock\',this)">📦 Courier Stock</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'benchmarks\',this)">⚖️ Regional Benchmarks</button>'+
-    '<button class="ret-snbtn" onclick="switchRetView(\'interventions\',this)">📝 Interventions</button>'+
     '</div>'+
     '<div id="ret-view-overview" class="ret-view active"></div>'+
     '<div id="ret-view-heatmap" class="ret-view"></div>'+
     '<div id="ret-view-stock" class="ret-view"></div>'+
     '<div id="ret-view-benchmarks" class="ret-view"></div>'+
-    '<div id="ret-view-interventions" class="ret-view"></div>';
+    '';
   renderRetOverview();
 }
 
@@ -1517,74 +1516,6 @@ function _buildBenchmarks(){
   else el.innerHTML='<div class="bench-content-wrap">'+content+'</div>';
 }
 
-// ── INTERVENTIONS ──
-function renderRetInterventions(){
-  const el=document.getElementById('ret-view-interventions');
-  if(!el||el.dataset.rendered) return;
-  el.dataset.rendered='1';
-
-  function getInterventions(){
-    try{return JSON.parse(localStorage.getItem('ews_interventions')||'[]');}catch(e){return [];}
-  }
-  function saveInterventions(arr){
-    try{localStorage.setItem('ews_interventions',JSON.stringify(arr));}catch(e){}
-  }
-
-  function buildTable(items){
-    if(!items.length) return '<div class="int-empty">No interventions logged yet. Add your first one above.</div>';
-    let rows='';
-    [...items].sort((a,b)=>b.date.localeCompare(a.date)).forEach((item,i)=>{
-      const m=MARKETS.find(x=>x.id===item.market);
-      rows+='<tr>'+
-        '<td><span class="flag">'+(m?m.flag:'')+'</span> '+(m?m.country:item.market)+'</td>'+
-        '<td><span class="int-tag">'+item.type+'</span></td>'+
-        '<td>'+item.date+'</td>'+
-        '<td>'+item.notes+'</td>'+
-        '<td><button class="int-del" onclick="deleteIntervention('+i+')">✕</button></td></tr>';
-    });
-    return '<table class="int-table"><thead><tr><th>Market</th><th>Type</th><th>Date</th><th>Notes</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
-  }
-
-  function refresh(){
-    document.getElementById('int-table-area').innerHTML=buildTable(getInterventions());
-  }
-
-  window.addIntervention=function(){
-    const market=document.getElementById('int-market').value;
-    const type=document.getElementById('int-type').value;
-    const date=document.getElementById('int-date').value;
-    const notes=document.getElementById('int-notes').value.trim();
-    if(!market||!date){alert('Please select a market and date.');return;}
-    const arr=getInterventions();
-    arr.push({market,type,date,notes});
-    saveInterventions(arr);
-    document.getElementById('int-notes').value='';
-    refresh();
-  };
-
-  window.deleteIntervention=function(idx){
-    const arr=getInterventions();
-    arr.splice(idx,1);
-    saveInterventions(arr);
-    refresh();
-    document.getElementById('ret-view-interventions').dataset.rendered='';
-    renderRetInterventions();
-  };
-
-  const mktOptions=MARKETS.map(m=>'<option value="'+m.id+'">'+m.flag+' '+m.country+'</option>').join('');
-  const today=new Date().toISOString().slice(0,10);
-
-  el.innerHTML='<div class="ret-section"><h3>CRM Intervention Tracker</h3>'+
-    '<p class="ret-note" style="margin-bottom:14px">Log CRM interventions deployed per market. Stored in your browser — compare against subsequent cohort M1 to measure impact.</p>'+
-    '<div class="int-form"><div class="int-form-grid">'+
-    '<div><label class="int-flbl">Market</label><select class="int-sel" id="int-market"><option value="">Select market…</option>'+mktOptions+'</select></div>'+
-    '<div><label class="int-flbl">Intervention type</label><select class="int-sel" id="int-type"><option>Push notification</option><option>Email campaign</option><option>In-app message</option><option>Earnings incentive</option><option>Onboarding sequence</option><option>Reactivation flow</option><option>Other</option></select></div>'+
-    '<div><label class="int-flbl">Date deployed</label><input type="date" class="int-inp" id="int-date" value="'+today+'"></div>'+
-    '<div><label class="int-flbl">Notes / details</label><input type="text" class="int-inp" id="int-notes" placeholder="e.g. Milestone push weeks 2–4…"></div>'+
-    '<div><button class="int-add" onclick="addIntervention()">+ Log</button></div>'+
-    '</div></div>'+
-    '<div id="int-table-area">'+buildTable(getInterventions())+'</div></div>';
-}
 
 
 // ═══════════════════════════════════════════
