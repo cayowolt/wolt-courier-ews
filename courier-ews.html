@@ -321,9 +321,14 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
 <!-- Tabs -->
 <div class="tabs">
   <div class="tab active" onclick="switchTab('countries',this)">🌍 4-Week Forecast</div>
-  <div class="tab" onclick="switchTab('regions',this)">📍 Regions</div>
   <div class="tab" onclick="switchTab('retention',this)">📊 Retention</div>
   <div class="tab" onclick="switchTab('faq',this)">📖 Methodology &amp; FAQ</div>
+</div>
+
+<!-- Forecast sub-view toggle (Countries / Regions) -->
+<div id="forecast-toggle" style="background:#F9FAFB;border-bottom:1px solid #E5E7EB;padding:8px 22px;display:flex;align-items:center;gap:8px">
+  <button id="ftog-countries" onclick="switchForecastView('countries')" style="padding:5px 14px;border-radius:7px;border:1px solid #111;background:#111;color:#fff;font-size:12px;font-weight:600;cursor:pointer">🗺️ Countries</button>
+  <button id="ftog-regions"   onclick="switchForecastView('regions')"   style="padding:5px 14px;border-radius:7px;border:1px solid #D1D5DB;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer">📍 Regions</button>
 </div>
 
 <!-- Summary strip (Countries only) -->
@@ -337,6 +342,7 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
 
 <!-- Countries Panel -->
 <div class="panel active" id="panel-countries">
+<div id="forecast-sub-countries">
   <div class="tcard">
     <div class="tscroll">
       <table id="main-table">
@@ -395,14 +401,13 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
     </div>
 
   </div>
-</div>
-
-<!-- Regions Panel -->
-<div class="panel" id="panel-regions">
+</div><!-- /forecast-sub-countries -->
+<div id="forecast-sub-regions" style="display:none">
   <div class="rpage">
     <div class="rsummary" id="region-cards"></div>
     <div id="region-detail-area"></div>
   </div>
+</div><!-- /forecast-sub-regions -->
 </div>
 
 <!-- Retention Panel -->
@@ -886,13 +891,30 @@ function sigBaseLeft(b,v){const cap=Math.max(v,b)*1.1;return Math.min(98,(b/cap)
 // ═══════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════
+let _forecastView='countries';
+
+function switchForecastView(v){
+  _forecastView=v;
+  document.getElementById('forecast-sub-countries').style.display = v==='countries'?'':'none';
+  document.getElementById('forecast-sub-regions').style.display   = v==='regions'?'':'none';
+  document.getElementById('strip-bar').style.display = v==='countries'?'flex':'none';
+  // Toggle button styles
+  const active='padding:5px 14px;border-radius:7px;border:1px solid #111;background:#111;color:#fff;font-size:12px;font-weight:600;cursor:pointer';
+  const idle  ='padding:5px 14px;border-radius:7px;border:1px solid #D1D5DB;background:#fff;color:#374151;font-size:12px;font-weight:600;cursor:pointer';
+  document.getElementById('ftog-countries').style.cssText = v==='countries'?active:idle;
+  document.getElementById('ftog-regions').style.cssText   = v==='regions'?active:idle;
+  if(v==='regions') renderRegions();
+}
+
 function switchTab(name, el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
-  document.getElementById('strip-bar').style.display = name==='countries' ? 'flex' : 'none';
-  if(name==='regions') renderRegions();
+  // forecast toggle + strip bar visibility
+  const isCountries = name==='countries';
+  document.getElementById('forecast-toggle').style.display = isCountries?'flex':'none';
+  document.getElementById('strip-bar').style.display = (isCountries && _forecastView==='countries')?'flex':'none';
   if(name==='retention') renderRetention();
 }
 
