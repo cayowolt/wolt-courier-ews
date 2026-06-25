@@ -920,6 +920,94 @@ function renderGlobal(){
   const netStatus=nCrit>0?'critical':nWatch>0?'watch':'stable';
   const netColor=netStatus==='critical'?'#EF4444':netStatus==='watch'?'#F97316':'#22C55E';
 
+  // ── AI Analysis ──
+  function buildAIAnalysis(){
+    const nCrit=MARKETS.filter(m=>m.status==='critical').length;
+    const nWatch=MARKETS.filter(m=>m.status==='watch').length;
+    const nTotal=MARKETS.length;
+    const networkScore=Math.round(MARKETS.reduce((s,m)=>s+m.score,0)/nTotal);
+
+    // Per-region health
+    const regionHealth={};
+    ['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH'].forEach(rk=>{
+      const mkts=MARKETS.filter(m=>(REGION_MAP[m.id]||'OTHER')===rk);
+      if(!mkts.length) return;
+      regionHealth[rk]={
+        avg:Math.round(mkts.reduce((s,m)=>s+m.score,0)/mkts.length),
+        crit:mkts.filter(m=>m.status==='critical').length,
+        watch:mkts.filter(m=>m.status==='watch').length,
+        total:mkts.length,
+        label:REGION_META[rk].label
+      };
+    });
+
+    // Most common driver across at-risk markets
+    const atRisk=MARKETS.filter(m=>m.status!=='stable'&&m.driver!=='—');
+    const driverCounts={};
+    atRisk.forEach(m=>{m.driver.split(/[+,]/).map(d=>d.trim()).forEach(d=>{if(d)driverCounts[d]=(driverCounts[d]||0)+1;});});
+    const topDriver=Object.entries(driverCounts).sort((a,b)=>b[1]-a[1])[0];
+
+    // Global vs regional pattern: is risk concentrated in one region or spread?
+    const affectedRegions=Object.entries(regionHealth).filter(([,r])=>r.crit>0||r.watch>0);
+    const isGlobal=affectedRegions.length>=3;
+    const isIsolated=affectedRegions.length===1;
+
+    // Signals analysis: which signals are most elevated network-wide
+    const signalKeys=['ftdConv','deliveries','ftdEarn','dutyHours','offerDecline'];
+    const signalNames={ftdConv:'FTD conversion',deliveries:'delivery volume',ftdEarn:'earnings quality',dutyHours:'duty hours',offerDecline:'deliveries rejected'};
+    const sigDeviations=signalKeys.map(k=>{
+      const vals=MARKETS.filter(m=>!m.signals[k].na&&m.signals[k].d!==0)
+                        .map(m=>({d:m.signals[k].d,hb:m.signals[k].hb}));
+      const negCount=vals.filter(v=>v.hb?v.d<0:v.d>0).length; // count "bad" deviations
+      return {k,name:signalNames[k],negCount,pct:Math.round(negCount/nTotal*100)};
+    }).sort((a,b)=>b.negCount-a.negCount);
+    const worstSignal=sigDeviations[0];
+
+    // Build sentences
+    let sentences=[];
+
+    // Overall health
+    if(nCrit===0&&nWatch===0){
+      sentences.push(`The network is in good health this week — all ${nTotal} markets are stable with a network average score of ${networkScore}/100.`);
+    } else {
+      const pctAtRisk=Math.round((nCrit+nWatch)/nTotal*100);
+      sentences.push(`${nCrit+nWatch} of ${nTotal} markets (${pctAtRisk}%) show elevated risk this week, with a network average score of ${networkScore}/100.`);
+    }
+
+    // Global vs regional pattern
+    if(nCrit+nWatch>0){
+      if(isGlobal){
+        sentences.push(`Risk is distributed across ${affectedRegions.length} regions (${affectedRegions.map(([,r])=>r.label).join(', ')}), suggesting a <strong>cross-network trend</strong> rather than an isolated regional issue.`);
+      } else if(isIsolated){
+        const [,r]=affectedRegions[0];
+        sentences.push(`Risk is concentrated in <strong>${r.label}</strong> (${r.crit} critical, ${r.watch} watch out of ${r.total} markets), pointing to a <strong>regional pattern</strong> rather than a global shift.`);
+      } else {
+        sentences.push(`Risk spans ${affectedRegions.length} regions (${affectedRegions.map(([,r])=>r.label).join(', ')}), with no single region accounting for all at-risk markets.`);
+      }
+    }
+
+    // Top driver
+    if(topDriver&&topDriver[1]>=2){
+      sentences.push(`The most common signal across at-risk markets is <strong>${topDriver[0]}</strong>, appearing in ${topDriver[1]} markets — worth monitoring at the network level.`);
+    }
+
+    // Worst signal network-wide
+    if(worstSignal.negCount>=3){
+      sentences.push(`Network-wide, <strong>${worstSignal.name}</strong> is the signal most frequently below baseline (${worstSignal.negCount} markets, ${worstSignal.pct}% of network).`);
+    }
+
+    // Best/worst regions
+    const sortedRegions=Object.entries(regionHealth).sort((a,b)=>b[1].avg-a[1].avg);
+    if(sortedRegions.length>=2){
+      const best=sortedRegions[0][1],worst=sortedRegions[sortedRegions.length-1][1];
+      sentences.push(`Strongest region: <strong>${best.label}</strong> (avg ${best.avg}/100). Most at-risk: <strong>${worst.label}</strong> (avg ${worst.avg}/100).`);
+    }
+
+    return sentences.join(' ');
+  }
+
+  const aiText=buildAIAnalysis();
+
   // Top network summary bar
   let html=`<div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
     <div>
@@ -937,6 +1025,16 @@ function renderGlobal(){
     </div>
     <div style="width:1px;height:40px;background:#E5E7EB"></div>
     <div style="font-size:11px;color:#9CA3AF">${MARKETS.length} markets · Data week 2026-06-01</div>
+  </div>`;
+
+  // AI analysis box
+  html+=`<div style="background:linear-gradient(135deg,#EFF6FF,#F5F3FF);border:1px solid #C7D2FE;border-radius:12px;padding:16px 20px;margin-bottom:18px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:16px">🤖</span>
+      <span style="font-size:12px;font-weight:700;color:#3730A3;text-transform:uppercase;letter-spacing:0.05em">AI Analysis</span>
+      <span style="font-size:10px;color:#6B7280;margin-left:4px">· generated from live signal data</span>
+    </div>
+    <p style="font-size:13px;color:#1E1B4B;line-height:1.65;margin:0">${aiText}</p>
   </div>`;
 
   // Region cards
@@ -1948,9 +2046,8 @@ function buildDetail(m){
   return `<div class="dinn"><div class="dgrid">
     <div class="dsec"><h4>Signal breakdown vs. 8-week baseline</h4>${bars}</div>
     <div class="dsec"><h4>Avg. deliveries/courier — 8-week trend</h4><div class="trendwrap"><canvas id="chart-${m.id}"></canvas></div></div>
-    <div class="dsec"><h4>Diagnosis &amp; action</h4>
+    <div class="dsec"><h4>Diagnosis</h4>
       <div class="hbox"><div class="blbl">Hypothesis</div><div class="btxt">${m.hypo}</div></div>
-      <div class="lbox"><div class="blbl">Recommended lever</div><div class="btxt">${m.lever}</div></div>
       ${urgHTML}
     </div>
   </div></div>`;
