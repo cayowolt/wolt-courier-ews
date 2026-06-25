@@ -1037,30 +1037,63 @@ function renderGlobal(){
     <p style="font-size:13px;color:#1E1B4B;line-height:1.65;margin:0">${aiText}</p>
   </div>`;
 
-  // ── Signal Coverage Bar ──
-  const signalDefs=[
-    {k:'ftdConv',   label:'FTD Conversion',      icon:'🚀', hb:true},
-    {k:'deliveries',label:'Delivery Volume',      icon:'📦', hb:true},
-    {k:'ftdEarn',   label:'Earnings Quality',     icon:'💰', hb:true},
-    {k:'dutyHours', label:'Duty Hours',           icon:'⏱️', hb:true},
-    {k:'offerDecline',label:'Deliveries Rejected',icon:'❌', hb:false},
+  // ── Metric Overview accordion ──
+  const metricDefs=[
+    {k:'ftdConv',    label:'FTD Conv. Rate (7-day)',              icon:'🚀', unit:'%', dp:1, hb:true},
+    {k:'deliveries', label:'Avg. Deliveries / Courier / Wk',     icon:'📦', unit:'',  dp:1, hb:true},
+    {k:'ftdEarn',    label:'Avg. Weekly Earnings (local curr.)',  icon:'💰', unit:'',  dp:0, hb:true},
+    {k:'dutyHours',  label:'Avg. Duty Hours / Courier / Wk',     icon:'⏱️', unit:'h', dp:1, hb:true},
+    {k:'offerDecline',label:'Deliveries Rejected (% task offers)',icon:'❌', unit:'%', dp:1, hb:false},
   ];
-  const nTotal=MARKETS.length;
-  const sigRows=signalDefs.map(sd=>{
-    const mkts=MARKETS.filter(m=>m.signals[sd.k]&&!m.signals[sd.k].na);
-    const belowBase=mkts.filter(m=>sd.hb ? m.signals[sd.k].d<0 : m.signals[sd.k].d>0);
-    const pct=Math.round(belowBase.length/nTotal*100);
-    const fillColor=pct>=50?'#EF4444':pct>=25?'#F97316':'#22C55E';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F3F4F6">
-      <span style="font-size:14px;width:20px;text-align:center">${sd.icon}</span>
-      <div style="flex:0 0 140px;font-size:12px;color:#374151;font-weight:500">${sd.label}</div>
-      <div style="flex:1;background:#F3F4F6;border-radius:4px;height:8px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:${fillColor};border-radius:4px;transition:width 0.4s"></div>
+  let metRows='';
+  metricDefs.forEach(md=>{
+    const mkts=MARKETS.filter(m=>m.signals[md.k]&&!m.signals[md.k].na);
+    const avg=mkts.reduce((s,m)=>s+m.signals[md.k].v,0)/mkts.length;
+    const avgFmt=avg.toFixed(md.dp)+(md.unit?' '+md.unit:'');
+    const sorted=[...mkts].sort((a,b)=>md.hb ? b.signals[md.k].v-a.signals[md.k].v : a.signals[md.k].v-b.signals[md.k].v);
+    const countryRows=sorted.map(m=>{
+      const sig=m.signals[md.k];
+      const dOk=md.hb ? sig.d>=0 : sig.d<=0;
+      const dColor=dOk?'#16A34A':'#DC2626';
+      const dSign=sig.d>=0?'+':'';
+      const stColor=m.status==='critical'?'#FEF2F2':m.status==='watch'?'#FFF7ED':'#F0FDF4';
+      const stDot=m.status==='critical'?'🔴':m.status==='watch'?'🟡':'🟢';
+      return `<tr style="background:${stColor}">
+        <td style="padding:5px 10px;font-size:14px">${m.flag}</td>
+        <td style="padding:5px 10px;font-size:12px;color:#374151;font-weight:500">${m.country}</td>
+        <td style="padding:5px 10px;font-size:12px;font-weight:700;color:#111;text-align:right">${sig.v.toFixed(md.dp)}${md.unit}</td>
+        <td style="padding:5px 10px;font-size:11px;font-weight:600;color:${dColor};text-align:right">${dSign}${sig.d.toFixed(md.dp)} vs baseline</td>
+        <td style="padding:5px 10px;font-size:12px;text-align:center">${stDot}</td>
+      </tr>`;
+    }).join('');
+    metRows+=`<div style="border-bottom:1px solid #F3F4F6">
+      <div onclick="toggleMet('${md.k}')" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;user-select:none;background:#fff;transition:background 0.15s" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
+        <span style="font-size:15px">${md.icon}</span>
+        <span style="flex:1;font-size:13px;font-weight:600;color:#111">${md.label}</span>
+        <span style="font-size:12px;color:#6B7280;margin-right:12px">Network avg: <strong style="color:#111">${avgFmt}</strong></span>
+        <span id="met-chv-${md.k}" style="font-size:10px;color:#9CA3AF;display:inline-block;transition:transform 0.2s">▶</span>
       </div>
-      <div style="flex:0 0 80px;font-size:12px;color:${fillColor};font-weight:700;text-align:right">${belowBase.length}/${nTotal} mkts</div>
-      <div style="flex:0 0 36px;font-size:11px;color:#9CA3AF;text-align:right">${pct}%</div>
+      <div id="met-body-${md.k}" style="display:none;padding:0 0 4px;overflow:auto;max-height:340px">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="position:sticky;top:0;background:#F9FAFB;border-bottom:1px solid #E5E7EB">
+            <th style="padding:4px 10px;font-size:10px;color:#9CA3AF;text-align:left;font-weight:600"></th>
+            <th style="padding:4px 10px;font-size:10px;color:#9CA3AF;text-align:left;font-weight:600">Market</th>
+            <th style="padding:4px 10px;font-size:10px;color:#9CA3AF;text-align:right;font-weight:600">Value</th>
+            <th style="padding:4px 10px;font-size:10px;color:#9CA3AF;text-align:right;font-weight:600">vs Baseline</th>
+            <th style="padding:4px 10px;font-size:10px;color:#9CA3AF;text-align:center;font-weight:600">Status</th>
+          </tr></thead>
+          <tbody>${countryRows}</tbody>
+        </table>
+      </div>
     </div>`;
-  }).join('');
+  });
+  html+=`<div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden;margin-bottom:14px">
+    <div style="padding:12px 16px;border-bottom:1px solid #E5E7EB;background:#F9FAFB;display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em">Metric Overview</span>
+      <span style="font-size:10px;color:#9CA3AF">— click any metric to expand per-country breakdown</span>
+    </div>
+    ${metRows}
+  </div>`;
 
   // ── Region Score Chart ──
   const regionOrder=['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH'];
@@ -1071,37 +1104,26 @@ function renderGlobal(){
     const worst=mkts.reduce((a,b)=>(['critical','watch','stable'].indexOf(a.status)<['critical','watch','stable'].indexOf(b.status)?a:b));
     const st=worst.status;
     return {rk, label:REGION_META[rk].label, avg, status:st,
-      color:st==='critical'?'#EF4444':st==='watch'?'#F97316':'#22C55E',
-      meta:REGION_META[rk]};
+      color:st==='critical'?'#EF4444':st==='watch'?'#F97316':'#22C55E'};
   }).filter(Boolean).sort((a,b)=>b.avg-a.avg);
-  const maxScore=Math.max(...regionScores.map(r=>r.avg),100);
-
   const regionBars=regionScores.map(r=>{
-    const barW=Math.round(r.avg/maxScore*100);
+    const barW=Math.round(r.avg);
     const deltaVal=r.avg-networkScore;
     const deltaStr=deltaVal>0?`+${deltaVal}`:`${deltaVal}`;
-    const deltaColor=deltaVal>0?'#22C55E':deltaVal<0?'#EF4444':'#9CA3AF';
+    const deltaColor=deltaVal>0?'#16A34A':deltaVal<0?'#DC2626':'#9CA3AF';
     return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F3F4F6">
       <div style="flex:0 0 70px;font-size:12px;font-weight:600;color:#111;text-align:right">${r.label}</div>
-      <div style="flex:1;background:#F3F4F6;border-radius:4px;height:14px;overflow:hidden;position:relative">
-        <div style="width:${barW}%;height:100%;background:${r.color};border-radius:4px;opacity:0.85;transition:width 0.4s"></div>
-        <div style="position:absolute;left:${Math.min(barW+1,70)}%;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#111;white-space:nowrap">${r.avg}</div>
+      <div style="flex:1;background:#F3F4F6;border-radius:4px;height:16px;overflow:hidden;position:relative">
+        <div style="width:${barW}%;height:100%;background:${r.color};border-radius:4px;opacity:0.8"></div>
+        <div style="position:absolute;left:${Math.min(barW+1,65)}%;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#111;white-space:nowrap">${r.avg}</div>
       </div>
-      <div style="flex:0 0 54px;font-size:11px;font-weight:600;color:${deltaColor};text-align:right">${deltaStr} vs avg</div>
+      <div style="flex:0 0 70px;font-size:11px;font-weight:600;color:${deltaColor};text-align:right">${deltaStr} vs avg</div>
     </div>`;
   }).join('');
-
-  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px">
-      <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Signal health — markets below baseline</div>
-      ${sigRows}
-      <div style="font-size:10px;color:#9CA3AF;margin-top:8px">Green &lt;25% · Amber 25–50% · Red &gt;50% of markets below baseline</div>
-    </div>
-    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px">
-      <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Region avg score (sorted best → worst)</div>
-      ${regionBars}
-      <div style="font-size:10px;color:#9CA3AF;margin-top:8px">Bar length = avg score / 100. Delta vs network average (${networkScore}).</div>
-    </div>
+  html+=`<div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Region avg health score</div>
+    ${regionBars}
+    <div style="font-size:10px;color:#9CA3AF;margin-top:8px">Scores 0–100. Delta vs network average (${networkScore}).</div>
   </div>`;
 
   // Region cards
@@ -2331,6 +2353,15 @@ function toggleRegionMarket(id){
 // ═══════════════════════════════════════════
 // FAQ ACCORDION
 // ═══════════════════════════════════════════
+function toggleMet(k){
+  const body=document.getElementById('met-body-'+k);
+  const chv=document.getElementById('met-chv-'+k);
+  if(!body) return;
+  const isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(chv) chv.style.transform=isOpen?'':'rotate(90deg)';
+}
+
 function toggleFaq(header){
   const body=header.nextElementSibling;
   const icon=header.querySelector('.fchv');
