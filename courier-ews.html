@@ -559,7 +559,7 @@ Score = 0.30 × FTD_Conversion
         <div class="faq-q">What does "M1 Impact in X weeks" mean?</div>
         <div class="faq-a"><p>It estimates how many weeks until the current leading-indicator degradation will show up in your standard M1 retention metric, based on typical cohort flow. A market showing "1 week" is either already impacting M1 or will do so in the current reporting cycle.</p></div>
         <div class="faq-q">What action should I take for a Critical market?</div>
-        <div class="faq-a"><p>Each market's detail panel contains a <em>Hypothesis</em> (likely root cause derived from signal pattern) and a <em>Recommended lever</em>. These are starting points for investigation — verify the hypothesis with local data before deploying a lever. Escalate to the market operations owner within 48h of a Critical flag.</p></div>
+        <div class="faq-a"><p>Each market's detail panel contains a <em>Hypothesis</em> (likely root cause derived from signal pattern) and an <em>Urgency</em> indicator. These are starting points for investigation — verify the hypothesis with local data before deploying an intervention. Escalate to the market operations owner within 48h of a Critical flag.</p></div>
         <div class="faq-q">How do I know if an intervention worked?</div>
         <div class="faq-a"><p>The trend sparkline shows the 8-week rolling FTD conversion. If an intervention was deployed, you should see the trend stabilise or reverse within 2–3 weeks. Because the baseline is rolling, a sustained recovery will eventually raise the baseline — plan to revisit the threshold if the market consistently outperforms its old baseline.</p></div>
         <div class="faq-q">The hypothesis seems wrong for my market — what should I do?</div>
@@ -1035,6 +1035,73 @@ function renderGlobal(){
       <span style="font-size:10px;color:#6B7280;margin-left:4px">· generated from live signal data</span>
     </div>
     <p style="font-size:13px;color:#1E1B4B;line-height:1.65;margin:0">${aiText}</p>
+  </div>`;
+
+  // ── Signal Coverage Bar ──
+  const signalDefs=[
+    {k:'ftdConv',   label:'FTD Conversion',      icon:'🚀', hb:true},
+    {k:'deliveries',label:'Delivery Volume',      icon:'📦', hb:true},
+    {k:'ftdEarn',   label:'Earnings Quality',     icon:'💰', hb:true},
+    {k:'dutyHours', label:'Duty Hours',           icon:'⏱️', hb:true},
+    {k:'offerDecline',label:'Deliveries Rejected',icon:'❌', hb:false},
+  ];
+  const nTotal=MARKETS.length;
+  const sigRows=signalDefs.map(sd=>{
+    const mkts=MARKETS.filter(m=>m.signals[sd.k]&&!m.signals[sd.k].na);
+    const belowBase=mkts.filter(m=>sd.hb ? m.signals[sd.k].d<0 : m.signals[sd.k].d>0);
+    const pct=Math.round(belowBase.length/nTotal*100);
+    const fillColor=pct>=50?'#EF4444':pct>=25?'#F97316':'#22C55E';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F3F4F6">
+      <span style="font-size:14px;width:20px;text-align:center">${sd.icon}</span>
+      <div style="flex:0 0 140px;font-size:12px;color:#374151;font-weight:500">${sd.label}</div>
+      <div style="flex:1;background:#F3F4F6;border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${fillColor};border-radius:4px;transition:width 0.4s"></div>
+      </div>
+      <div style="flex:0 0 80px;font-size:12px;color:${fillColor};font-weight:700;text-align:right">${belowBase.length}/${nTotal} mkts</div>
+      <div style="flex:0 0 36px;font-size:11px;color:#9CA3AF;text-align:right">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // ── Region Score Chart ──
+  const regionOrder=['GERMANY','ISRAEL','NORTH','CENTRAL','SOUTH'];
+  const regionScores=regionOrder.map(rk=>{
+    const mkts=MARKETS.filter(m=>(REGION_MAP[m.id]||'OTHER')===rk);
+    if(!mkts.length) return null;
+    const avg=Math.round(mkts.reduce((s,m)=>s+m.score,0)/mkts.length);
+    const worst=mkts.reduce((a,b)=>(['critical','watch','stable'].indexOf(a.status)<['critical','watch','stable'].indexOf(b.status)?a:b));
+    const st=worst.status;
+    return {rk, label:REGION_META[rk].label, avg, status:st,
+      color:st==='critical'?'#EF4444':st==='watch'?'#F97316':'#22C55E',
+      meta:REGION_META[rk]};
+  }).filter(Boolean).sort((a,b)=>b.avg-a.avg);
+  const maxScore=Math.max(...regionScores.map(r=>r.avg),100);
+
+  const regionBars=regionScores.map(r=>{
+    const barW=Math.round(r.avg/maxScore*100);
+    const deltaVal=r.avg-networkScore;
+    const deltaStr=deltaVal>0?`+${deltaVal}`:`${deltaVal}`;
+    const deltaColor=deltaVal>0?'#22C55E':deltaVal<0?'#EF4444':'#9CA3AF';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F3F4F6">
+      <div style="flex:0 0 70px;font-size:12px;font-weight:600;color:#111;text-align:right">${r.label}</div>
+      <div style="flex:1;background:#F3F4F6;border-radius:4px;height:14px;overflow:hidden;position:relative">
+        <div style="width:${barW}%;height:100%;background:${r.color};border-radius:4px;opacity:0.85;transition:width 0.4s"></div>
+        <div style="position:absolute;left:${Math.min(barW+1,70)}%;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#111;white-space:nowrap">${r.avg}</div>
+      </div>
+      <div style="flex:0 0 54px;font-size:11px;font-weight:600;color:${deltaColor};text-align:right">${deltaStr} vs avg</div>
+    </div>`;
+  }).join('');
+
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px">
+      <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Signal health — markets below baseline</div>
+      ${sigRows}
+      <div style="font-size:10px;color:#9CA3AF;margin-top:8px">Green &lt;25% · Amber 25–50% · Red &gt;50% of markets below baseline</div>
+    </div>
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px">
+      <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Region avg score (sorted best → worst)</div>
+      ${regionBars}
+      <div style="font-size:10px;color:#9CA3AF;margin-top:8px">Bar length = avg score / 100. Delta vs network average (${networkScore}).</div>
+    </div>
   </div>`;
 
   // Region cards
