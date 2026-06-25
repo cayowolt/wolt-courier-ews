@@ -1937,7 +1937,7 @@ function renderRetReport(){
     const txt=buildFullText();
     navigator.clipboard.writeText(txt).then(()=>{
       const btn=document.getElementById('copy-full-btn');
-      if(btn){btn.textContent='✓ Copied!';setTimeout(()=>{btn.textContent='📋 Copy full report',2000);}}
+      if(btn){btn.textContent='✓ Copied!';setTimeout(()=>{btn.textContent='📋 Copy full report';},2000);}
     });
   };
 
@@ -1953,6 +1953,7 @@ function renderRetReport(){
     '</div>'+
     '<p style="font-size:11px;color:#9CA3AF;margin-bottom:16px">Generated: '+today+'</p>'+
     cards+'</div>';
+}
 
 
 
