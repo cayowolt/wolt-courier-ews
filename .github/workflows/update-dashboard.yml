@@ -1,0 +1,53 @@
+name: Update EWS Dashboard Data
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC (data from previous week's cohort is ready)
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    # Manual trigger — useful for backfills or testing
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the updated HTML
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --quiet \
+            snowflake-connector-python \
+            cryptography
+
+      - name: Run data update script
+        env:
+          SNOWFLAKE_ACCOUNT:   ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER:      ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD:  ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE || 'EXPLORATION_M' }}
+          SNOWFLAKE_DATABASE:  ${{ vars.SNOWFLAKE_DATABASE  || 'PRODUCTION' }}
+          SNOWFLAKE_ROLE:      ${{ vars.SNOWFLAKE_ROLE      || 'BASE_USER' }}
+        run: python scripts/update_data.py
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add courier-ews.html
+          if git diff --staged --quiet; then
+            echo "No data changes — skipping commit."
+          else
+            WEEK=$(date +%Y-%m-%d)
+            git commit -m "data: auto-update dashboard for week ${WEEK}"
+            git push
+            echo "✅ Pushed updated dashboard."
+          fi
