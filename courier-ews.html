@@ -956,7 +956,7 @@ function renderGlobal(){
 
     // Signals analysis: which signals are most elevated network-wide
     const signalKeys=['ftdConv','deliveries','ftdEarn','dutyHours','tar'];
-    const signalNames={ftdConv:'FTD conversion',deliveries:'delivery volume',ftdEarn:'earnings quality',dutyHours:'duty hours',tar:'deliveries rejected'};
+    const signalNames={ftdConv:'FTD conversion',deliveries:'delivery volume',ftdEarn:'earnings quality',dutyHours:'duty hours',tar:'task acceptance rate (TAR)'};
     const sigDeviations=signalKeys.map(k=>{
       const vals=MARKETS.filter(m=>!m.signals[k].na&&m.signals[k].d!==0)
                         .map(m=>({d:m.signals[k].d,hb:m.signals[k].hb}));
@@ -2100,7 +2100,7 @@ function renderCountries(){
       <td><div class="scwrap"><span class="scnum ${m.status}">${m.score}</span><div class="scbar"><div class="scfill ${m.status}" style="width:${m.score}%"></div></div>${scDelta(m.scoreDelta)}</div></td>
       <td><div class="mwrap"><div class="mval">${s.ftdConv.na?'<span style="color:#9CA3AF;font-size:11px">N/A</span>':(s.ftdConv.v!=null?s.ftdConv.v+'%':'—')}</div>${(!s.ftdConv.na&&s.ftdConv.v!=null)?fmtD(s.ftdConv.d,'%',true):''}</div></td>
       <td><div class="mwrap"><div class="mval">${s.deliveries.v!=null?s.deliveries.v:'—'}</div>${s.deliveries.v!=null?fmtD(s.deliveries.d,'',true):''}</div></td>
-      <td><div class="mwrap"><div class="mval">${s.tar.v!=null?s.tar.v+'%':'—'}</div>${s.tar.v!=null?fmtD(s.tar.d,'%',false):''}</div></td>
+      <td><div class="mwrap"><div class="mval">${s.tar.v!=null?s.tar.v+'%':'—'}</div>${s.tar.v!=null?fmtD(s.tar.d,'%',true):''}</div></td>
       <td><div class="drtxt">${m.driver==='—'?'<span class="drnone">—</span>':m.driver}</div></td>
       <td>${m.m1weeks?`<span class="impill imp${Math.min(m.m1weeks,3)}">${m.m1weeks}w to M1</span>`:'<span class="impna">—</span>'}</td>`;
     tbody.appendChild(tr);
@@ -2122,7 +2122,7 @@ function renderCountries(){
 
 function buildDetail(m){
   const s=m.signals;
-  const labels={ftdConv:'FTD conv. rate (7-day)',deliveries:'Avg. deliveries / courier / wk',ftdEarn:'Avg. weekly earnings (local currency)',dutyHours:'Avg. duty hours / courier / wk',tar:'Deliveries rejected (% of task offers rejected)'};
+  const labels={ftdConv:'FTD conv. rate (7-day)',deliveries:'Avg. deliveries / courier / wk',ftdEarn:'Avg. weekly earnings (local currency)',dutyHours:'Avg. duty hours / courier / wk',tar:'Task Acceptance Rate (TAR)'};
   let bars='';
   Object.entries(labels).forEach(([k,lbl])=>{
     const sg=s[k];
