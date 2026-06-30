@@ -311,7 +311,7 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
     <div class="wdot"></div>
     <div>
       <h1>Courier Retention — Early Warning System</h1>
-      <div class="header-sub">Leading indicators · 4–6 weeks ahead of M1 retention</div>
+      <div class="header-sub">Leading indicators · 4–6 weeks ahead of M2 retention (days 30–60)</div>
     </div>
     <span class="wpill">Live · Snowflake</span>
   </div>
@@ -358,7 +358,7 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
             <th onclick="sortBy('deliveries')"><div class="thwrap">Deliveries/wk <i class="tip" data-tip="Average deliveries completed per active courier per week in the latest data week. Measures engagement intensity. Compared against each market's own 8-week median baseline. Higher is better.">?</i><span class="si">↕</span></div></th>
             <th onclick="sortBy('offerDecline')"><div class="thwrap">Deliveries Rejected <i class="tip" data-tip="% of task offers (delivery requests) that couriers reject after going online. Formula: 1 − (accepted / served). Universally available across all markets. Delta shows deviation from 8-week baseline — a rising rejection rate is an early disengagement signal. Lower is better.">?</i><span class="si">↕</span></div></th>
             <th onclick="sortBy('driver')"><div class="thwrap">Primary Driver <i class="tip" data-tip="The signal(s) most responsible for the current score deviation. Identified by finding which signal has the highest absolute deviation from baseline. '—' means all signals are within normal variance.">?</i><span class="si">↕</span></div></th>
-            <th onclick="sortBy('m1Impact')"><div class="thwrap">M1 Impact <i class="tip" data-tip="Estimated weeks until current signal deviations would typically show up in the M1 retention rate, based on known lag patterns between onboarding behaviour and monthly activity. Ranges from 1 week (imminent) to 5+ weeks (early warning). '—' = no elevated signals.">?</i><span class="si">↕</span></div></th>
+            <th onclick="sortBy('m1Impact')"><div class="thwrap">M2 Impact <i class="tip" data-tip="Estimated weeks until current signal deviations would typically show up in M2 retention (days 30–60), based on known lag patterns between onboarding behaviour and monthly activity. Ranges from 1 week (imminent) to 5+ weeks (early warning). '—' = no elevated signals.">?</i><span class="si">↕</span></div></th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -373,11 +373,11 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
       </div>
       <div class="faq-body">
         <p>The <strong>cohort date</strong> in the Retention tab is the calendar month when a batch of couriers made their <em>first ever delivery</em>. It is not the current date — it reflects when each group of new couriers joined the platform.</p>
-        <p>The most recent cohort shown per market is the latest one where M1 can already be computed. Computing M1 requires the following calendar month to have fully elapsed (so we know whether each courier was active in their second month). In practice this means the Retention data lags the current date by 4–8 weeks.</p>
+        <p>The most recent cohort shown per market is the latest one where M2 can already be computed. Computing M2 requires the following calendar month to have fully elapsed (so we know whether each courier made ≥1 delivery in days 30–60). In practice this means the Retention data lags the current date by 4–8 weeks.</p>
         <p>Different markets show different "latest" cohort months for three reasons:</p>
         <ul>
           <li><strong>Cohort size filter:</strong> Cohorts with fewer than 20 new couriers are excluded as statistically unreliable. Small markets (Iceland, Luxembourg) therefore show older dates because recent months didn't meet the minimum threshold.</li>
-          <li><strong>Feb 2026 anomaly:</strong> February 2026 cohorts are automatically excluded across all markets due to a known onboarding flow change that suppressed apparent M1 figures. Markets where March is the most recent non-excluded cohort will show "2026-03".</li>
+          <li><strong>Feb 2026 anomaly:</strong> February 2026 cohorts are automatically excluded across all markets due to a known onboarding flow change that suppressed apparent M2 figures. Markets where March is the most recent non-excluded cohort will show "2026-03".</li>
           <li><strong>Market launch date:</strong> Recently launched markets have fewer historical cohort months available.</li>
         </ul>
         <p>The Retention data is refreshed weekly alongside the main EWS signals, using the same Snowflake PRODUCTION tables.</p>
@@ -422,7 +422,7 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
   <div class="faqwrap">
     <div class="faq-intro">
       This FAQ explains how the Early Warning System works, how each metric is defined, and how to interpret the watchlist.
-      The system is designed to surface retention risk <strong>4–6 weeks before it appears in standard M1 KPIs</strong> — giving market teams enough time to intervene.
+      The system is designed to surface retention risk <strong>4–6 weeks before it appears in standard M2 KPIs (days 30–60 retention)</strong> — giving market teams enough time to intervene.
     </div>
 
     <div class="faq-section">
@@ -432,9 +432,9 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
       </div>
       <div class="faq-section-body open">
         <div class="faq-a">
-          <p>Standard retention metrics (M1 active rate, M3 retention) are cohort-based and inherently lagging — by the time a drop appears, the affected cohort has already been lost. The EWS works by instrumenting the <em>funnel events that predict</em> retention rather than measuring retention itself.</p>
+          <p>Standard retention metrics (M2 active rate days 30–60, M3 retention days 60–90) are cohort-based and inherently lagging — by the time a drop appears, the affected cohort has already been lost. The EWS works by instrumenting the <em>funnel events that predict</em> retention rather than measuring retention itself.</p>
           <p>Each week, the system measures 6 leading indicators for each market's <strong>newest courier cohort</strong>. Each indicator is compared against that market's 8-week rolling baseline and scored. The 6 scores are combined into a single composite health score (0–100). Markets below defined thresholds are flagged as <em>Watch</em> or <em>Critical</em>.</p>
-          <p>The typical lead time is <strong>4–6 weeks</strong>: a drop in FTD conversion this week will show up in M1 retention in 3–4 weeks. This dashboard updates every Monday with the previous week's cohort data.</p>
+          <p>The typical lead time is <strong>4–6 weeks</strong>: a drop in FTD conversion this week will show up in M2 retention (days 30–60) in 3–4 weeks. This dashboard updates every Monday with the previous week's cohort data.</p>
         </div>
       </div>
     </div>
@@ -469,7 +469,7 @@ Score = 0.30 × FTD_Conversion
         </div>
         <table class="weight-table">
           <tr><th>Signal</th><th>Weight</th><th>Rationale</th></tr>
-          <tr><td>FTD Conversion Rate</td><td>30%</td><td>Strongest single predictor of M1 retention</td></tr>
+          <tr><td>FTD Conversion Rate</td><td>30%</td><td>Strongest single predictor of M2 retention (days 30–60)</td></tr>
           <tr><td>T7 Trips (median)</td><td>20%</td><td>Captures early habit formation — best M3 predictor</td></tr>
           <tr><td>FTD Earnings Quality</td><td>15%</td><td>Bad first earnings = churn risk even after FTD</td></tr>
           <tr><td>T14 Active Hours</td><td>15%</td><td>Engagement depth; couriers with ≥15h in wk 1–2 have 2× retention</td></tr>
@@ -486,7 +486,7 @@ Score = 0.30 × FTD_Conversion
       </div>
       <div class="faq-section-body">
         <div class="faq-q">FTD Conversion Rate (%)</div>
-        <div class="faq-a"><p>The percentage of newly activated couriers who complete their first delivery within 7 days of account approval. "Activated" means the courier has passed all onboarding steps and is eligible to receive orders.</p><p><strong>Why it matters:</strong> The most predictive single metric for M1 retention. Couriers who don't complete a first delivery within 7 days have a &lt;10% chance of being active at M1.</p><p><strong>Lead time:</strong> 3–4 weeks ahead of M1 retention.</p></div>
+        <div class="faq-a"><p>The percentage of newly activated couriers who complete their first delivery within 7 days of account approval. "Activated" means the courier has passed all onboarding steps and is eligible to receive orders.</p><p><strong>Why it matters:</strong> The most predictive single metric for M2 retention (days 30–60). Couriers who don't complete a first delivery within 7 days have a &lt;10% chance of being active at M2.</p><p><strong>Lead time:</strong> 3–4 weeks ahead of M2 retention (days 30–60).</p></div>
 
         <div class="faq-q">T7 Trips — Deliveries in first 7 days (median)</div>
         <div class="faq-a"><p>The median number of completed deliveries among couriers who completed at least one (i.e., excluding those who never converted). This measures how deeply new couriers engage once they start.</p><p><strong>Why it matters:</strong> Couriers with 3+ trips in week 1 show 2× M3 retention vs. those with 1–2 trips. It captures whether couriers are building a working habit or just dipping their toes in.</p><p><strong>Lead time:</strong> 5–6 weeks ahead of M3 retention.</p></div>
@@ -495,13 +495,13 @@ Score = 0.30 × FTD_Conversion
         <div class="faq-a"><p>Average gross earnings from a courier's <em>first delivery</em>. This reflects the earnings experience of the very first trip — distance, pay per km, wait time at pickup, tip.</p><p><strong>Why it matters:</strong> A bad first earnings experience is a churn signal disguised as a neutral event. Couriers whose first trip earns significantly below expectations are unlikely to return, even after successfully converting.</p></div>
 
         <div class="faq-q">T14 Active Hours — Hours on shift in first 14 days</div>
-        <div class="faq-a"><p>Total hours the courier spent with the app in "available" or "on delivery" state during their first two weeks. Measures engagement depth beyond trip count.</p><p><strong>Why it matters:</strong> Distinguishes casual explorers from committed couriers. Couriers with ≥15 active hours in their first 14 days have materially better M1 and M3 retention curves.</p></div>
+        <div class="faq-a"><p>Total hours the courier spent with the app in "available" or "on delivery" state during their first two weeks. Measures engagement depth beyond trip count.</p><p><strong>Why it matters:</strong> Distinguishes casual explorers from committed couriers. Couriers with ≥15 active hours in their first 14 days have materially better M2 and M3 retention curves.</p></div>
 
         <div class="faq-q">Shift Cancellation Rate (%)</div>
         <div class="faq-a"><p>The percentage of scheduled or committed shifts that were cancelled by the courier (in markets with scheduled supply) or the percentage of active sessions ended within 15 minutes of starting (in open-market regions). Measured on the current week's new cohort.</p><p><strong>Why it matters:</strong> Rising cancellations are a behavioural pre-churn signal — couriers who are disengaging tend to start accepting shifts then abandoning them 2–3 weeks before they go inactive.</p></div>
 
         <div class="faq-q">Onboarding Completion Rate (%)</div>
-        <div class="faq-a"><p>The percentage of new signups who complete all required onboarding steps (document upload, profile completion, equipment pickup if applicable) within 7 days of signup.</p><p><strong>Why it matters:</strong> Onboarding friction reduces the FTD conversion pool before a courier ever attempts a delivery. A drop in onboarding completion will show up in FTD conversion 1–2 weeks later.</p><p><strong>Lead time:</strong> Earliest available signal — 6–8 weeks ahead of M1 retention.</p></div>
+        <div class="faq-a"><p>The percentage of new signups who complete all required onboarding steps (document upload, profile completion, equipment pickup if applicable) within 7 days of signup.</p><p><strong>Why it matters:</strong> Onboarding friction reduces the FTD conversion pool before a courier ever attempts a delivery. A drop in onboarding completion will show up in FTD conversion 1–2 weeks later.</p><p><strong>Lead time:</strong> Earliest available signal — 6–8 weeks ahead of M2 retention (days 30–60).</p></div>
       </div>
     </div>
 
@@ -556,8 +556,8 @@ Score = 0.30 × FTD_Conversion
         <span class="fchv">▼</span>
       </div>
       <div class="faq-section-body">
-        <div class="faq-q">What does "M1 Impact in X weeks" mean?</div>
-        <div class="faq-a"><p>It estimates how many weeks until the current leading-indicator degradation will show up in your standard M1 retention metric, based on typical cohort flow. A market showing "1 week" is either already impacting M1 or will do so in the current reporting cycle.</p></div>
+        <div class="faq-q">What does "M2 Impact in X weeks" mean?</div>
+        <div class="faq-a"><p>It estimates how many weeks until the current leading-indicator degradation will show up in your M2 retention metric (days 30–60 after first delivery), based on typical cohort flow. A market showing "1 week" is either already impacting M2 or will do so in the current reporting cycle.</p></div>
         <div class="faq-q">What action should I take for a Critical market?</div>
         <div class="faq-a"><p>Each market's detail panel contains a <em>Hypothesis</em> (likely root cause derived from signal pattern) and an <em>Urgency</em> indicator. These are starting points for investigation — verify the hypothesis with local data before deploying an intervention. Escalate to the market operations owner within 48h of a Critical flag.</p></div>
         <div class="faq-q">How do I know if an intervention worked?</div>
@@ -1256,7 +1256,7 @@ function renderRetention(){
   if(!container) return;
   container.innerHTML=
     '<div class="ret-header"><h2 style="font-size:17px;font-weight:800;color:#111;margin:0 0 3px">Courier Retention Analytics</h2>'+
-    '<p style="color:#6B7280;font-size:12px;margin:0">M1 = % active in 2nd month &nbsp;·&nbsp; M2 = % active in 3rd month &nbsp;·&nbsp; Feb 2026 cohorts excluded (onboarding anomaly)</p></div>'+
+    '<p style="color:#6B7280;font-size:12px;margin:0">M2 = % with ≥1 delivery in days 30–60 &nbsp;·&nbsp; M3 = % with ≥1 delivery in days 60–90 &nbsp;·&nbsp; Feb 2026 cohorts excluded (onboarding anomaly)</p></div>'+
     '<div class="ret-subnav">'+
     '<button class="ret-snbtn active" onclick="switchRetView(\'overview\',this)">📋 Overview</button>'+
     '<button class="ret-snbtn" onclick="switchRetView(\'heatmap\',this)">🔥 Cohort Heatmap</button>'+
@@ -1345,10 +1345,10 @@ function _buildOverviewTable(){
     '<th style="'+thStyle+'" onclick="_sortOverview(\'region\')"><div class="thwrap">Region'+si('region')+' <i class="tip tip-left" data-tip="Operational region grouping. Click to group by region.">?</i></div></th>'+
     '<th><div class="thwrap">Cohort <i class="tip tip-left" data-tip="The calendar month when these couriers made their first delivery. Lags 4–8 weeks behind today. Feb 2026 excluded (onboarding anomaly).">?</i></div></th>'+
     '<th style="'+thStyle+'" onclick="_sortOverview(\'size\')"><div class="thwrap">Size'+si('size')+' <i class="tip tip-left" data-tip="Number of new couriers in the cohort month. Click to sort by cohort size.">?</i></div></th>'+
-    '<th style="'+thStyle+'" onclick="_sortOverview(\'m1\')"><div class="thwrap">M1'+si('m1')+' <i class="tip tip-left" data-tip="Month-1 retention: % still active in the following calendar month. Click to sort best → worst.">?</i></div></th>'+
-    '<th style="'+thStyle+'" onclick="_sortOverview(\'m2\')"><div class="thwrap">M2'+si('m2')+' <i class="tip tip-left" data-tip="Month-2 retention: % still active two months after first delivery. Click to sort.">?</i></div></th>'+
-    '<th style="min-width:80px"><div class="thwrap">M1 Trend <i class="tip tip-left" data-tip="Sparkline: M1 over last 5–8 cohort months (oldest left → newest right). Green = improving, red = declining.">?</i></div></th>'+
-    '<th><div class="thwrap">vs Prev <i class="tip tip-left" data-tip="Change in M1 vs. previous cohort month (pp). ▲ = improvement, ▼ = deterioration.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'m1\')"><div class="thwrap">M2'+si('m1')+' <i class="tip tip-left" data-tip="M2 retention: % of couriers with ≥1 delivery in days 30–60 after their first delivery. Click to sort best → worst.">?</i></div></th>'+
+    '<th style="'+thStyle+'" onclick="_sortOverview(\'m2\')"><div class="thwrap">M3'+si('m2')+' <i class="tip tip-left" data-tip="M3 retention: % of couriers with ≥1 delivery in days 60–90 after their first delivery. Click to sort.">?</i></div></th>'+
+    '<th style="min-width:80px"><div class="thwrap">M2 Trend <i class="tip tip-left" data-tip="Sparkline: M2 (days 30–60) over last 5–8 cohort months (oldest left → newest right). Green = improving, red = declining.">?</i></div></th>'+
+    '<th><div class="thwrap">vs Prev <i class="tip tip-left" data-tip="Change in M2 vs. previous cohort month (pp). ▲ = improvement, ▼ = deterioration.">?</i></div></th>'+
     '</tr></thead>';
 
   // Check if container already exists (re-sort), update only tbody + headers
@@ -1362,16 +1362,16 @@ function _buildOverviewTable(){
   }
 
   el.innerHTML='<div class="ret-section"><h3>All Markets — Latest Cohort</h3>'+
-    '<p style="font-size:12px;color:#6B7280;margin-bottom:10px">Click column headers to sort. Default: M1 descending (best performing first).</p>'+
+    '<p style="font-size:12px;color:#6B7280;margin-bottom:10px">Click column headers to sort. Default: M2 descending (best performing first).</p>'+
     '<div style="overflow-x:auto" class="ret-overview-table-wrap"><table class="ret-table">'+thead+'<tbody>'+rows+'</tbody></table></div>'+
-    '<div class="ret-note" style="margin-top:8px">Trend sparkline: M1 over time (oldest→newest). Green = improving, Red = declining. "vs Prev" = change from previous cohort month.</div></div>'+
+    '<div class="ret-note" style="margin-top:8px">Trend sparkline: M2 (days 30–60) over time (oldest→newest). Green = improving, Red = declining. "vs Prev" = change from previous cohort month.</div></div>'+
     '<div class="ret-insights" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">'+
     '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">'+
     '<div style="font-weight:700;color:#15803D;margin-bottom:6px">🟢 Consistently Strong</div>'+
-    '<div style="font-size:13px;color:#166534;line-height:1.7"><strong>Cyprus & Malta</strong> — M1 85–93%, stable for 8+ months<br><strong>Germany</strong> — M1 88–94%, best large market<br><strong>Latvia & Lithuania</strong> — trending up to M1 80–90%</div></div>'+
+    '<div style="font-size:13px;color:#166534;line-height:1.7"><strong>Cyprus & Malta</strong> — M2 85–93%, stable for 8+ months<br><strong>Germany</strong> — M2 88–94%, best large market<br><strong>Latvia & Lithuania</strong> — trending up to M2 80–90%</div></div>'+
     '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">'+
     '<div style="font-weight:700;color:#DC2626;margin-bottom:6px">🔴 Structural Risk</div>'+
-    '<div style="font-size:13px;color:#991B1B;line-height:1.7"><strong>Kazakhstan</strong> — M2 consistently 40–47%, high M1→M2 drop<br><strong>Azerbaijan</strong> — M2 15–20pp below M1 every cohort<br><strong>Luxembourg</strong> — Dec/Jan anomaly, low confidence</div></div></div>';
+    '<div style="font-size:13px;color:#991B1B;line-height:1.7"><strong>Kazakhstan</strong> — M3 consistently 40–47%, high M2→M3 drop<br><strong>Azerbaijan</strong> — M3 15–20pp below M2 every cohort<br><strong>Luxembourg</strong> — Dec/Jan anomaly, low confidence</div></div></div>';
 }
 
 // ── HEATMAP ──
@@ -1412,11 +1412,11 @@ function _buildHeatmap(){
     '<span style="font-size:12px;color:#6B7280;font-weight:500">Metric:</span>'+
     '<button class="hm-toggle-btn" data-metric="m1" onclick="_switchHmMetric(\'m1\')" '+
       'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
-      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M1</button>'+
+      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
     '<button class="hm-toggle-btn" data-metric="m2" onclick="_switchHmMetric(\'m2\')" '+
       'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
-      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
-    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'M2 = % active in 3rd month after first delivery':'M1 = % active in 2nd month after first delivery')+'</span>'+
+      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M3</button>'+
+    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'M3 = % with ≥1 delivery in days 60–90 after first delivery':'M2 = % with ≥1 delivery in days 30–60 after first delivery')+'</span>'+
   '</div>';
 
   const legend='<div class="hm-legend">Color scale ('+metricLabel+'%):<span class="hm-swatch" style="background:#FEE2E2"></span>&lt;40'+
@@ -1550,7 +1550,7 @@ function renderRetStock(){
 
   // ── KPI strip (shared) ──
   const kpis='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px">'+
-    '<div class="stock-total"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">M1-retained couriers<br>from last 3 cohorts</div></div></div>'+
+    '<div class="stock-total"><div><div class="stock-num">'+total.toLocaleString()+'</div><div class="stock-sub">M2-retained couriers<br>(days 30–60)</div></div></div>'+
     '<div class="stock-total" style="background:linear-gradient(135deg,#065F46,#10B981)"><div><div class="stock-num">'+totalM2.toLocaleString()+'</div><div class="stock-sub">M2-retained couriers<br>long-term sticky fleet</div></div></div>'+
   '</div>';
 
@@ -1582,12 +1582,12 @@ function renderRetStock(){
         '<td style="color:#374151;font-size:12px">'+m2txt+'</td>'+
         '</tr>';
     });
-    return '<p class="ret-note" style="margin-bottom:12px">Estimated active couriers contributed by the last 3 cohort months (cohort_size × M1 retention rate). Bars sized by market. Blue = stable, orange = watch, red = critical.</p>'+
+    return '<p class="ret-note" style="margin-bottom:12px">Estimated active couriers contributed by the last 3 cohort months (cohort_size × M2 retention rate, days 30–60). Bars sized by market. Blue = stable, orange = watch, red = critical.</p>'+
       '<div style="overflow-x:auto"><table class="ret-table"><thead><tr>'+
         '<th>Market</th>'+
-        '<th style="min-width:200px"><div class="thwrap">Onboarded Stock (M1) <i class="tip tip-left" data-tip="Couriers from last 3 cohorts still active at M1.">?</i></div></th>'+
-        '<th><div class="thwrap">M1 Rate <i class="tip tip-left" data-tip="Latest cohort M1 retention %. Shows the quality of recent onboarding.">?</i></div></th>'+
-        '<th><div class="thwrap">M2 Stock <i class="tip tip-left" data-tip="Couriers still active at M2. The long-term sticky portion of the onboarded fleet.">?</i></div></th>'+
+        '<th style="min-width:200px"><div class="thwrap">Onboarded Stock (M2) <i class="tip tip-left" data-tip="Couriers from last 3 cohorts still active at M2 (days 30–60 after first delivery).">?</i></div></th>'+
+        '<th><div class="thwrap">M1 Rate <i class="tip tip-left" data-tip="Latest cohort M2 retention % (days 30–60). Shows the quality of recent onboarding.">?</i></div></th>'+
+        '<th><div class="thwrap">M2 Stock <i class="tip tip-left" data-tip="Couriers still active at M3 (days 60–90). The long-term sticky portion of the onboarded fleet.">?</i></div></th>'+
       '</tr></thead><tbody>'+trows+'</tbody></table></div>';
   }
 
@@ -1764,7 +1764,7 @@ function _buildBenchmarks(){
       const devcls=Math.abs(parseFloat(dev))<2?'neu':isPos?'pos':'neg';
       // Show both M1 and M2 side by side for context
       const m2badge=metric==='m1'&&d.m2!=null?
-        '<span style="font-size:10px;color:#9CA3AF;margin-left:4px">M2: '+d.m2+'%</span>':'';
+        '<span style="font-size:10px;color:#9CA3AF;margin-left:4px">M3: '+d.m2+'%</span>':'';
       rows+='<div class="bench-row">'+
         '<div class="bench-mkt"><span class="flag">'+d.m.flag+'</span>'+d.m.country+m2badge+'</div>'+
         '<div style="position:relative;height:20px;background:#F3F4F6;border-radius:4px;overflow:hidden">'+
@@ -1786,16 +1786,16 @@ function _buildBenchmarks(){
     '<span style="font-size:12px;color:#6B7280;font-weight:500">Metric:</span>'+
     '<button class="bench-toggle-btn" data-metric="m1" onclick="_switchBenchMetric(\'m1\')" '+
       'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
-      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M1</button>'+
+      (metric==='m1'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
     '<button class="bench-toggle-btn" data-metric="m2" onclick="_switchBenchMetric(\'m2\')" '+
       'style="padding:4px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.1s;'+
-      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M2</button>'+
-    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'Showing % active in 3rd month — compare with M1 to spot the activation→stickiness drop-off':'Showing % active in 2nd month. Switch to M2 to see long-term stickiness.')+'</span>'+
+      (metric==='m2'?'background:#111;color:#fff;border-color:#111':'background:#fff;color:#374151;border-color:#D1D5DB')+'">M3</button>'+
+    '<span style="font-size:11px;color:#9CA3AF;margin-left:4px">'+(metric==='m2'?'Showing M3: % with ≥1 delivery in days 60–90 — compare with M2 to spot the stickiness drop-off':'Showing M2: % with ≥1 delivery in days 30–60. Switch to M3 to see long-term stickiness.')+'</span>'+
   '</div>';
 
   const content='<div class="ret-section"><h3>'+metricLabel+' Retention vs. Regional Median</h3>'+
     '<p class="ret-note" style="margin-bottom:12px">Each bar shows how far a market\'s latest '+metricLabel+' sits above or below its regional median. A market 10pp below peers is a stronger signal than the same absolute number in isolation.'+
-    (metric==='m1'?' Switch to M2 to check whether markets that look fine in M1 are actually losing couriers a month later.':' Markets where M1 looks fine but M2 is red have an activation-but-not-sticking problem.')+'</p>'+
+    (metric==='m1'?' Switch to M3 to check whether markets that look fine in M2 are actually losing couriers a month later.':' Markets where M2 looks fine but M3 is red have an activation-but-not-sticking problem.')+'</p>'+
     toggle+'<div class="bench-grid">'+cards+'</div></div>';
 
   const wrap=el.querySelector('.bench-content-wrap');
@@ -1902,7 +1902,7 @@ function renderRetReport(){
       const regionTrend=prevM1vals.length?
         (prevM1vals.filter(v=>v>0).length>prevM1vals.filter(v=>v<0).length?'↗️':'↘️'):'—';
 
-      lines.push('*'+reg.label+'*  Median M1: *'+medM1+'%*'+(medM2?' | Median M2: *'+medM2+'%*':'')+' '+regionTrend);
+      lines.push('*'+reg.label+'*  Median M2: *'+medM1+'%*'+(medM2?' | Median M3: *'+medM2+'%*':'')+' '+regionTrend);
       lines.push('_latest cohort: '+latestCohort+'_');
       lines.push('');
 
@@ -1990,7 +1990,7 @@ function renderRetReport(){
       '<div style="background:'+hdrColor+';padding:12px 16px;display:flex;align-items:center;justify-content:space-between">'+
         '<div>'+
           '<span style="font-size:14px;font-weight:800;color:#fff">'+(reg.type==='standalone'?mFlag(reg.ids[0])+' ':'')+reg.label+'</span>'+
-          (reg.type==='group'?'<span style="font-size:11px;color:rgba(255,255,255,0.8);margin-left:8px">Median M1 <strong style="color:#fff">'+medM1+'%</strong>'+(medM2?' · M2 <strong style="color:#fff">'+medM2+'%</strong>':'')+'</span>':'')+
+          (reg.type==='group'?'<span style="font-size:11px;color:rgba(255,255,255,0.8);margin-left:8px">Median M2 <strong style="color:#fff">'+medM1+'%</strong>'+(medM2?' · M3 <strong style="color:#fff">'+medM2+'%</strong>':'')+'</span>':'')+
           '<div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">Cohort: '+latestCohort+'</div>'+
         '</div>'+
         '<button onclick="copyRegionReport('+ri+')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:600" id="copy-btn-'+ri+'">Copy for Slack</button>'+
@@ -2000,9 +2000,9 @@ function renderRetReport(){
         '<table style="width:100%;border-collapse:collapse">'+
           '<thead><tr>'+
             '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">Market</th>'+
-            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">M1</th>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">M3</th>'+
             '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">vs Prev</th>'+
-            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">M2</th>'+
+            '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">M3</th>'+
             '<th style="padding:4px 8px;font-size:10px;font-weight:600;color:#9CA3AF;text-align:left;text-transform:uppercase">Cohort</th>'+
           '</tr></thead>'+
           '<tbody>'+marketRows+'</tbody>'+
@@ -2038,7 +2038,7 @@ function renderRetReport(){
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">'+
       '<div>'+
         '<h3 style="margin:0 0 3px">Monthly Retention Report</h3>'+
-        '<p class="ret-note">Real cohort M1 &amp; M2 data per region, Slack-ready. "vs Prev" = change from prior valid cohort (Feb 2026 excluded). ✅ Consistently strong = above network median for 3+ months. ⚠️ Needs attention = declining 2+ cohorts or &gt;10pp below regional median.</p>'+
+        '<p class="ret-note">Real cohort M2 &amp; M3 data per region, Slack-ready. "vs Prev" = change from prior valid cohort (Feb 2026 excluded). ✅ Consistently strong = above network median for 3+ months. ⚠️ Needs attention = declining 2+ cohorts or &gt;10pp below regional median.</p>'+
       '</div>'+
       '<button id="copy-full-btn" onclick="copyFullReport()" style="padding:8px 16px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0">📋 Copy full report</button>'+
     '</div>'+
@@ -2102,7 +2102,7 @@ function renderCountries(){
       <td><div class="mwrap"><div class="mval">${s.deliveries.v!=null?s.deliveries.v:'—'}</div>${s.deliveries.v!=null?fmtD(s.deliveries.d,'',true):''}</div></td>
       <td><div class="mwrap"><div class="mval">${s.offerDecline.v!=null?s.offerDecline.v+'%':'—'}</div>${s.offerDecline.v!=null?fmtD(s.offerDecline.d,'%',false):''}</div></td>
       <td><div class="drtxt">${m.driver==='—'?'<span class="drnone">—</span>':m.driver}</div></td>
-      <td>${m.m1weeks?`<span class="impill imp${Math.min(m.m1weeks,3)}">${m.m1weeks}w to M1</span>`:'<span class="impna">—</span>'}</td>`;
+      <td>${m.m1weeks?`<span class="impill imp${Math.min(m.m1weeks,3)}">${m.m1weeks}w to M2</span>`:'<span class="impna">—</span>'}</td>`;
     tbody.appendChild(tr);
 
     const dtr=document.createElement('tr');
@@ -2134,7 +2134,7 @@ function buildDetail(m){
     const dfmt=sg.d===0?'':`<span style="${dstyle};font-size:11px;font-weight:600">${dArrow} ${Math.abs(sg.d)}${sg.u}</span>`;
     bars+=`<div class="sigi"><div class="sigh"><span class="sigl">${lbl}</span><span class="sigv">${sg.v}${sg.u} ${dfmt}</span></div><div class="sigt"><div class="sigf ${fc}" style="width:${fw}%"></div><div class="sigtick" style="left:${bl}%"></div></div><div class="sigb"><span>0</span><span>Baseline: ${sg.b}${sg.u}</span></div></div>`;
   });
-  const urgHTML=m.m1weeks?`<div class="urgrow"><span class="urglbl">Est. M1 impact:</span><span class="urgb urg${Math.min(m.m1weeks,3)}">${m.m1weeks} week${m.m1weeks>1?'s':''}</span></div>`:'';
+  const urgHTML=m.m1weeks?`<div class="urgrow"><span class="urglbl">Est. M2 impact:</span><span class="urgb urg${Math.min(m.m1weeks,3)}">${m.m1weeks} week${m.m1weeks>1?'s':''}</span></div>`:'';
   return `<div class="dinn"><div class="dgrid">
     <div class="dsec"><h4>Signal breakdown vs. 8-week baseline</h4>${bars}</div>
     <div class="dsec"><h4>Avg. deliveries/courier — 8-week trend</h4><div class="trendwrap"><canvas id="chart-${m.id}"></canvas></div></div>
@@ -2320,7 +2320,7 @@ function renderRegions(){
           <div class="rthcell">FTD Conv.</div>
           <div class="rthcell">Deliveries/wk</div>
           <div class="rthcell">Primary Driver</div>
-          <div class="rthcell">M1 Impact</div>
+          <div class="rthcell">M2 Impact</div>
         </div>
         ${rows}
         ${mDetail}
