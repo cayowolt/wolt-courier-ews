@@ -40,7 +40,8 @@ SF_ROLE      = os.environ.get("SNOWFLAKE_ROLE",       "BASE_USER")
 #   T7_DELIVERIES      FLOAT    — median deliveries in first 7 days (among converters)
 #   FTD_EARNINGS       FLOAT    — avg gross earnings from first delivery (local currency)
 #   T14_DUTY_HOURS     FLOAT    — avg active hours in first 14 days
-#   OFFER_DECLINE_RATE FLOAT    — % of task offers declined
+#   TAR                FLOAT    — Task Acceptance Rate: % of task offers accepted
+#                                (= 1 − offer_decline_rate). Higher = better.
 #
 # Retention columns (sourced from a separate retention table / join):
 #   M2_RETENTION       FLOAT    — % of couriers with ≥1 delivery in days 30–60 after
@@ -88,14 +89,14 @@ MARKETS_META = {
 }
 
 # Signal definitions
-SIGNAL_KEYS = ["ftdConv", "deliveries", "ftdEarn", "dutyHours", "offerDecline"]
-SIGNAL_UNIT = {"ftdConv": "%", "deliveries": "", "ftdEarn": "", "dutyHours": "h", "offerDecline": "%"}
-SIGNAL_HB   = {"ftdConv": True, "deliveries": True, "ftdEarn": True, "dutyHours": True, "offerDecline": False}
+SIGNAL_KEYS = ["ftdConv", "deliveries", "ftdEarn", "dutyHours", "tar"]
+SIGNAL_UNIT = {"ftdConv": "%", "deliveries": "", "ftdEarn": "", "dutyHours": "h", "tar": "%"}
+SIGNAL_HB   = {"ftdConv": True, "deliveries": True, "ftdEarn": True, "dutyHours": True, "tar": True}
 # Column index in query result (0=country, 1=week, 2..6=signals)
-COL_IDX = {"ftdConv": 2, "deliveries": 3, "ftdEarn": 4, "dutyHours": 5, "offerDecline": 6}
+COL_IDX = {"ftdConv": 2, "deliveries": 3, "ftdEarn": 4, "dutyHours": 5, "tar": 6}
 
 # Scoring weights (must sum to 1.0)
-WEIGHTS = {"ftdConv": 0.30, "deliveries": 0.20, "ftdEarn": 0.15, "dutyHours": 0.15, "offerDecline": 0.10}
+WEIGHTS = {"ftdConv": 0.30, "deliveries": 0.20, "ftdEarn": 0.15, "dutyHours": 0.15, "tar": 0.10}
 # Remaining 10% (onboarding completion — not yet in pipeline) distributed proportionally
 _w_sum = sum(WEIGHTS.values())
 WEIGHTS = {k: v / _w_sum for k, v in WEIGHTS.items()}
@@ -109,7 +110,7 @@ def signal_score(v: float, b: float, hb: bool) -> float:
         return 50.0
     delta_pct = (v - b) / abs(b) * 100
     if not hb:
-        delta_pct = -delta_pct          # invert: higher offerDecline = worse
+        delta_pct = -delta_pct          # invert: lower value = worse (not used for TAR since hb=True)
     if delta_pct >= 0:
         return 100.0
     elif delta_pct >= -15:
@@ -145,14 +146,14 @@ def derive_driver_hypo(signals: dict, status: str):
         "deliveries":  "Low T7 trips",
         "ftdEarn":     "Low earnings",
         "dutyHours":   "Low duty hours",
-        "offerDecline":"High rejection",
+        "tar":         "Low TAR",
     }
     HYPOS = {
         "ftdConv":     "FTD conversion is below baseline — new couriers are activating but not completing a first delivery within 7 days. Check onboarding friction, equipment availability, and zone coverage.",
         "deliveries":  "Median trips in first 7 days are below baseline — couriers who start are not building a delivery habit. Consider early-trip nudges or earnings transparency improvements.",
         "ftdEarn":     "Earnings from the first delivery are below expectations — may indicate unfavourable zone assignment, low order density, or short-distance first orders. Review order allocation for new couriers.",
         "dutyHours":   "Active duty hours in the first 14 days are low — couriers are not engaging deeply after onboarding. Check shift availability and scheduling UX.",
-        "offerDecline":"Offer decline rate is elevated — couriers are rejecting more task offers than usual. Check offer quality (distance, pay), zone demand-supply balance, and recent weather or event effects.",
+        "tar":         "Task acceptance rate (TAR) is below baseline — couriers are rejecting more task offers than usual. Check offer quality (distance, pay), zone demand-supply balance, and recent weather or event effects.",
     }
 
     bad = sorted(
@@ -231,7 +232,7 @@ def fetch_data(conn):
             T7_DELIVERIES,
             FTD_EARNINGS,
             T14_DUTY_HOURS,
-            OFFER_DECLINE_RATE
+            TAR  -- Task Acceptance Rate (% offers accepted). If your table stores offer_decline_rate, use: (1 - OFFER_DECLINE_RATE) * 100 AS TAR
         FROM {COHORT_TABLE}
         WHERE COHORT_WEEK >= DATEADD(week, -10, (SELECT MAX(COHORT_WEEK) FROM {COHORT_TABLE}))
           AND COUNTRY_CODE IN ({ids_sql})
