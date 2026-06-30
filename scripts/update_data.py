@@ -41,6 +41,18 @@ SF_ROLE      = os.environ.get("SNOWFLAKE_ROLE",       "BASE_USER")
 #   FTD_EARNINGS       FLOAT    — avg gross earnings from first delivery (local currency)
 #   T14_DUTY_HOURS     FLOAT    — avg active hours in first 14 days
 #   OFFER_DECLINE_RATE FLOAT    — % of task offers declined
+#
+# Retention columns (sourced from a separate retention table / join):
+#   M2_RETENTION       FLOAT    — % of couriers with ≥1 delivery in days 30–60 after
+#                                 their first delivery (= "second month" retention)
+#   M3_RETENTION       FLOAT    — % of couriers with ≥1 delivery in days 60–90 after
+#                                 their first delivery (= "third month" retention)
+#
+# M2 definition: a courier counts as retained at M2 if they completed at least
+# one delivery in the window [first_delivery_date + 30 days, first_delivery_date + 60 days).
+# SQL pattern:
+#   SUM(CASE WHEN deliveries_in_days_30_60 >= 1 THEN 1 ELSE 0 END) * 100.0
+#   / NULLIF(COUNT(DISTINCT courier_id), 0)  AS M2_RETENTION
 COHORT_TABLE = os.environ.get(
     "COHORT_TABLE",
     "PRODUCTION.COURIER_ANALYTICS.WEEKLY_COHORT_SIGNALS"  # ← replace with real name
