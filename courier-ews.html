@@ -447,15 +447,14 @@ th:last-child .tip::after,.tip.tip-left::after{left:auto;right:0;transform:none}
       <div class="faq-section-body open">
         <div class="faq-q">Score formula</div>
         <div class="faq-a">
-          Each of the 6 signals is scored 0–100 based on its deviation from the market's 8-week baseline. The composite score is a weighted average:
+          Each of the 5 signals is scored 0–100 based on its deviation from the market's 8-week baseline. The composite score is a weighted average:
         </div>
         <div class="formula-box">
 Score = 0.30 × FTD_Conversion
       + 0.20 × T7_Trips
       + 0.15 × FTD_Earnings
       + 0.15 × T14_Active_Hours
-      + 0.10 × Shift_Cancellation (inverted)
-      + 0.10 × Onboarding_Completion
+      + 0.10 × Task_Acceptance_Rate (TAR)
         </div>
         <div class="faq-q">Signal scoring (per signal)</div>
         <div class="faq-a">
@@ -465,7 +464,7 @@ Score = 0.30 × FTD_Conversion
             <li><strong>50–99</strong> — 1–15% below baseline (linear interpolation)</li>
             <li><strong>0–49</strong> — more than 15% below baseline (linear interpolation)</li>
           </ul>
-          <p style="margin-top:8px">For inverse metrics (Shift Cancellation), the logic is reversed: values <em>above</em> baseline score low.</p>
+          <p style="margin-top:8px">All 5 signals are "higher is better" — no inversion is applied in the current model.</p>
         </div>
         <table class="weight-table">
           <tr><th>Signal</th><th>Weight</th><th>Rationale</th></tr>
@@ -473,8 +472,7 @@ Score = 0.30 × FTD_Conversion
           <tr><td>T7 Trips (median)</td><td>20%</td><td>Captures early habit formation — best M2 predictor</td></tr>
           <tr><td>FTD Earnings Quality</td><td>15%</td><td>Bad first earnings = churn risk even after FTD</td></tr>
           <tr><td>T14 Active Hours</td><td>15%</td><td>Engagement depth; couriers with ≥15h in wk 1–2 have 2× retention</td></tr>
-          <tr><td>Shift Cancellation Rate</td><td>10%</td><td>Rising cancellations precede disengagement by 2–3 weeks</td></tr>
-          <tr><td>Onboarding Completion</td><td>10%</td><td>Friction in onboarding predicts lower FTD rate</td></tr>
+          <tr><td>Task Acceptance Rate (TAR)</td><td>10%</td><td>Falling TAR indicates couriers rejecting more offers — an early disengagement signal</td></tr>
         </table>
       </div>
     </div>
@@ -497,11 +495,8 @@ Score = 0.30 × FTD_Conversion
         <div class="faq-q">T14 Active Hours — Hours on shift in first 14 days</div>
         <div class="faq-a"><p>Total hours the courier spent with the app in "available" or "on delivery" state during their first two weeks. Measures engagement depth beyond trip count.</p><p><strong>Why it matters:</strong> Distinguishes casual explorers from committed couriers. Couriers with ≥15 active hours in their first 14 days have materially better M1 and M2 retention curves.</p></div>
 
-        <div class="faq-q">Shift Cancellation Rate (%)</div>
-        <div class="faq-a"><p>The percentage of scheduled or committed shifts that were cancelled by the courier (in markets with scheduled supply) or the percentage of active sessions ended within 15 minutes of starting (in open-market regions). Measured on the current week's new cohort.</p><p><strong>Why it matters:</strong> Rising cancellations are a behavioural pre-churn signal — couriers who are disengaging tend to start accepting shifts then abandoning them 2–3 weeks before they go inactive.</p></div>
-
-        <div class="faq-q">Onboarding Completion Rate (%)</div>
-        <div class="faq-a"><p>The percentage of new signups who complete all required onboarding steps (document upload, profile completion, equipment pickup if applicable) within 7 days of signup.</p><p><strong>Why it matters:</strong> Onboarding friction reduces the FTD conversion pool before a courier ever attempts a delivery. A drop in onboarding completion will show up in FTD conversion 1–2 weeks later.</p><p><strong>Lead time:</strong> Earliest available signal — 6–8 weeks ahead of M1 retention (days 31–60).</p></div>
+        <div class="faq-q">Task Acceptance Rate — TAR (%)</div>
+        <div class="faq-a"><p>The percentage of task offers (delivery requests served to the courier) that the courier accepts. Formula: accepted offers ÷ served offers × 100. Available universally across all markets.</p><p><strong>Why it matters:</strong> A falling TAR indicates couriers are actively declining more work than usual — an early behavioural disengagement signal. Couriers tend to reduce acceptance before reducing active hours or going fully inactive, making TAR a leading indicator of churn. Replaces the older "Deliveries Rejected" metric (which was 100 − TAR).</p><p><strong>Lead time:</strong> 2–4 weeks ahead of M1 retention (days 31–60) changes.</p></div>
       </div>
     </div>
 
