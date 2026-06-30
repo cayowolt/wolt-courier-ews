@@ -96,7 +96,7 @@ SIGNAL_HB   = {"ftdConv": True, "deliveries": True, "ftdEarn": True, "dutyHours"
 COL_IDX = {"ftdConv": 2, "deliveries": 3, "ftdEarn": 4, "dutyHours": 5, "tar": 6}
 
 # Scoring weights (must sum to 1.0)
-WEIGHTS = {"ftdConv": 0.30, "deliveries": 0.20, "ftdEarn": 0.15, "dutyHours": 0.15, "tar": 0.10}
+WEIGHTS = {"ftdConv": 0.333, "deliveries": 0.222, "ftdEarn": 0.167, "dutyHours": 0.167, "tar": 0.111}  # sums to 1.0; auto-normalised below
 # Remaining 10% (onboarding completion — not yet in pipeline) distributed proportionally
 _w_sum = sum(WEIGHTS.values())
 WEIGHTS = {k: v / _w_sum for k, v in WEIGHTS.items()}
